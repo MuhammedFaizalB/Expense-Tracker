@@ -1,4 +1,5 @@
 import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/lending/domain/entities/lending_entity.dart';
 import 'package:expense_tracker/features/lending/presentation/bloc/lending_bloc.dart';
 import 'package:flutter/material.dart';

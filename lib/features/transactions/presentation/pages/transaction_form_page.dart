@@ -1,4 +1,5 @@
 import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_entity.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
