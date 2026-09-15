@@ -2,6 +2,7 @@ import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -42,8 +43,30 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       appBar: AppBar(),
       body: BlocListener<AuthBloc, AuthState>(
-        listenWhen: (prev, curr) => curr.status == AuthStatus.failure,
-        listener: (context, state) {
+        listenWhen: (prev, curr) =>
+            curr.status == AuthStatus.failure ||
+            (curr.needsEmailConfirmation && !prev.needsEmailConfirmation),
+        listener: (context, state) async {
+          if (state.needsEmailConfirmation) {
+            await showDialog<void>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Check your email'),
+                content: Text(
+                  state.errorMessage ??
+                      'Please verify your email before logging in.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            );
+            if (context.mounted) context.go('/login');
+            return;
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage ?? 'Something went wrong.'),

@@ -29,6 +29,9 @@ class _LendingFormPageState extends State<LendingFormPage> {
   late DateTime _date = widget.existing?.transactionDate ?? DateTime.now();
   late DateTime? _dueDate = widget.existing?.dueDate;
 
+  bool _submitting = false;
+  int _baselineActionId = 0;
+
   Future<void> _pickDate({required bool isDue}) async {
     final picked = await showDatePicker(
       context: context,
@@ -64,12 +67,16 @@ class _LendingFormPageState extends State<LendingFormPage> {
       updatedAt: now,
     );
 
+    setState(() {
+      _submitting = true;
+      _baselineActionId = context.read<LendingBloc>().state.actionId;
+    });
+
     if (widget.existing != null) {
       context.read<LendingBloc>().add(LendingRecordUpdated(entity));
     } else {
       context.read<LendingBloc>().add(LendingRecordAdded(entity));
     }
-    Navigator.of(context).pop();
   }
 
   @override
@@ -80,80 +87,105 @@ class _LendingFormPageState extends State<LendingFormPage> {
           widget.existing != null ? 'Edit Record' : 'Add Lending Record',
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SegmentedButton<LendingType>(
-                  segments: const [
-                    ButtonSegment(value: LendingType.lent, label: Text('Lent')),
-                    ButtonSegment(
-                      value: LendingType.borrowed,
-                      label: Text('Borrowed'),
+      body: BlocListener<LendingBloc, LendingState>(
+        listener: (context, state) {
+          if (!_submitting) return;
+          if (state.actionId > _baselineActionId) {
+            Navigator.of(context).pop();
+          } else if (state.errorMessage != null) {
+            setState(() => _submitting = false);
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
+          }
+        },
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SegmentedButton<LendingType>(
+                    segments: const [
+                      ButtonSegment(
+                        value: LendingType.lent,
+                        label: Text('Lent'),
+                      ),
+                      ButtonSegment(
+                        value: LendingType.borrowed,
+                        label: Text('Borrowed'),
+                      ),
+                    ],
+                    selected: {_type},
+                    onSelectionChanged: (s) => setState(() => _type = s.first),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(labelText: 'Person'),
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'Enter a name' : null,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _amountController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
                     ),
-                  ],
-                  selected: {_type},
-                  onSelectionChanged: (s) => setState(() => _type = s.first),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Person'),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Enter a name' : null,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _amountController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Amount',
+                      prefixText: '₹ ',
+                    ),
+                    validator: (v) {
+                      final n = double.tryParse(v ?? '');
+                      if (n == null || n <= 0) {
+                        return 'Enter an amount greater than zero';
+                      }
+                      return null;
+                    },
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Amount',
-                    prefixText: '₹ ',
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _descController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description (optional)',
+                    ),
                   ),
-                  validator: (v) {
-                    final n = double.tryParse(v ?? '');
-                    if (n == null || n <= 0) {
-                      return 'Enter an amount greater than zero';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _descController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (optional)',
+                  const SizedBox(height: AppSpacing.md),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Date'),
+                    trailing: Text('${_date.day}/${_date.month}/${_date.year}'),
+                    onTap: () => _pickDate(isDue: false),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Date'),
-                  trailing: Text('${_date.day}/${_date.month}/${_date.year}'),
-                  onTap: () => _pickDate(isDue: false),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Due date (optional)'),
-                  trailing: Text(
-                    _dueDate == null
-                        ? 'Set date'
-                        : '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}',
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Due date (optional)'),
+                    trailing: Text(
+                      _dueDate == null
+                          ? 'Set date'
+                          : '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}',
+                    ),
+                    onTap: () => _pickDate(isDue: true),
                   ),
-                  onTap: () => _pickDate(isDue: true),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                ElevatedButton(
-                  onPressed: _submit,
-                  child: const Text('Save Record'),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.lg),
+                  ElevatedButton(
+                    onPressed: _submitting ? null : _submit,
+                    child: _submitting
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Save Record'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

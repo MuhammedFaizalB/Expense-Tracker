@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/core/theme/theme_extensions.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
@@ -11,86 +12,109 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class TransactionDetailPage extends StatelessWidget {
-  final TransactionEntity transaction;
-  const TransactionDetailPage({super.key, required this.transaction});
+  final String transactionId;
+  const TransactionDetailPage({super.key, required this.transactionId});
 
   @override
   Widget build(BuildContext context) {
-    final isIncome = transaction.type == TransactionType.income;
-    final color = isIncome ? context.colors.income : context.colors.expense;
-    final category = context
-        .watch<CategoryBloc>()
-        .state
-        .categories
-        .where((c) => c.id == transaction.categoryId)
-        .firstOrNull;
+    return BlocBuilder<TransactionBloc, TransactionState>(
+      buildWhen: (prev, curr) => prev.transactions != curr.transactions,
+      builder: (context, state) {
+        final transaction = state.transactions.firstWhereOrNull(
+          (t) => t.id == transactionId,
+        );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Transaction'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => TransactionFormPage(existing: transaction),
-              ),
+        if (transaction == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Transaction')),
+            body: const Center(
+              child: Text('This transaction is no longer available.'),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Delete transaction?'),
-                  content: const Text('This cannot be undone.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('Delete'),
-                    ),
-                  ],
+          );
+        }
+
+        final isIncome = transaction.type == TransactionType.income;
+        final color = isIncome ? context.colors.income : context.colors.expense;
+        final category = context
+            .watch<CategoryBloc>()
+            .state
+            .categories
+            .where((c) => c.id == transaction.categoryId)
+            .firstOrNull;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Transaction'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => TransactionFormPage(existing: transaction),
+                  ),
                 ),
-              );
-              if (confirmed == true && context.mounted) {
-                context.read<TransactionBloc>().add(
-                  TransactionDeleted(transaction.id),
-                );
-                context.pop();
-              }
-            },
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Delete transaction?'),
+                      content: const Text('This cannot be undone.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true && context.mounted) {
+                    context.read<TransactionBloc>().add(
+                      TransactionDeleted(transaction.id),
+                    );
+                    context.pop();
+                  }
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(transaction.title, style: context.textStyles.headlineSmall),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}',
-              style: context.textStyles.headlineSmall?.copyWith(color: color),
+          body: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  transaction.title,
+                  style: context.textStyles.headlineSmall,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}',
+                  style: context.textStyles.headlineSmall?.copyWith(
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _row(context, 'Type', isIncome ? 'Income' : 'Expense'),
+                _row(context, 'Category', category?.name ?? 'Uncategorized'),
+                _row(
+                  context,
+                  'Date',
+                  DateFormatter.display(transaction.transactionDate),
+                ),
+                if (transaction.description != null)
+                  _row(context, 'Description', transaction.description!),
+              ],
             ),
-            const SizedBox(height: AppSpacing.lg),
-            _row(context, 'Type', isIncome ? 'Income' : 'Expense'),
-            _row(context, 'Category', category?.name ?? 'Uncategorized'),
-            _row(
-              context,
-              'Date',
-              DateFormatter.display(transaction.transactionDate),
-            ),
-            if (transaction.description != null)
-              _row(context, 'Description', transaction.description!),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

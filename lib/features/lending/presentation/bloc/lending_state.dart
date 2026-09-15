@@ -9,12 +9,15 @@ class LendingState extends Equatable {
   final LendingStatus? filterStatus;
   final String? errorMessage;
 
+  final int actionId;
+
   const LendingState({
     this.status = LendingStatusUi.initial,
     this.records = const [],
     this.filterType,
     this.filterStatus,
     this.errorMessage,
+    this.actionId = 0,
   });
 
   List<LendingEntity> get filteredRecords => records.where((r) {
@@ -35,6 +38,7 @@ class LendingState extends Equatable {
     LendingType? filterType,
     LendingStatus? filterStatus,
     String? errorMessage,
+    int? actionId,
     bool clearFilterType = false,
     bool clearFilterStatus = false,
   }) {
@@ -46,6 +50,7 @@ class LendingState extends Equatable {
           ? null
           : (filterStatus ?? this.filterStatus),
       errorMessage: errorMessage,
+      actionId: actionId ?? this.actionId,
     );
   }
 
@@ -56,5 +61,6 @@ class LendingState extends Equatable {
     filterType,
     filterStatus,
     errorMessage,
+    actionId,
   ];
 }

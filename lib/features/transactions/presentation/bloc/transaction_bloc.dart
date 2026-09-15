@@ -85,6 +85,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         state.copyWith(
           transactions: [created, ...state.transactions],
           errorMessage: null,
+          actionId: state.actionId + 1,
         ),
       ),
     );
@@ -103,6 +104,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
               .map((t) => t.id == updated.id ? updated : t)
               .toList(),
           errorMessage: null,
+          actionId: state.actionId + 1,
         ),
       ),
     );

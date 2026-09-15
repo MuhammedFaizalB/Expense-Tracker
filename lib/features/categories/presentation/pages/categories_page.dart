@@ -2,6 +2,7 @@ import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_entity.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/category_form_dialog.dart';
+import 'package:expense_tracker/features/categories/presentation/widgets/category_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -101,6 +102,11 @@ class _CategoryGrid extends StatelessWidget {
                   CircleAvatar(
                     backgroundColor: Color(c.color).withValues(alpha: 0.15),
                     radius: 20,
+                    child: Icon(
+                      resolveCategoryIcon(c.icon),
+                      color: Color(c.color),
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(

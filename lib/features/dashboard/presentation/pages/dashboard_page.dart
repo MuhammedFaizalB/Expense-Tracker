@@ -121,8 +121,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     (t) => TransactionListTile(
                       transaction: t,
                       category: categoriesById[t.categoryId],
-                      onTap: () =>
-                          context.push('/transactions/${t.id}', extra: t),
+                      onTap: () => context.push('/transactions/${t.id}'),
                     ),
                   ),
               ],

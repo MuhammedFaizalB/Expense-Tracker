@@ -25,6 +25,13 @@ class AuthFailure extends Failure {
   const AuthFailure(super.message);
 }
 
+class EmailConfirmationRequiredFailure extends Failure {
+  const EmailConfirmationRequiredFailure([
+    super.message =
+        'Account created. Please check your email to verify your account, then log in.',
+  ]);
+}
+
 class ValidationFailure extends Failure {
   const ValidationFailure(super.message);
 }

@@ -13,6 +13,14 @@ class AuthException implements Exception {
   const AuthException(this.message);
 }
 
+class EmailConfirmationRequiredException implements Exception {
+  final String message;
+  const EmailConfirmationRequiredException([
+    this.message =
+        'Account created. Please check your email to verify your account, then log in.',
+  ]);
+}
+
 class NotFoundException implements Exception {
   final String message;
   const NotFoundException([this.message = 'Not found']);

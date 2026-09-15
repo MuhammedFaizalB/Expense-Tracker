@@ -7,15 +7,16 @@ class AuthState extends Equatable {
   final UserEntity? user;
   final String? errorMessage;
 
-  /// Set briefly after a password-reset email is sent, so the UI can show a
-  /// one-time confirmation without it persisting across rebuilds.
   final bool passwordResetEmailSent;
+
+  final bool needsEmailConfirmation;
 
   const AuthState({
     this.status = AuthStatus.initial,
     this.user,
     this.errorMessage,
     this.passwordResetEmailSent = false,
+    this.needsEmailConfirmation = false,
   });
 
   bool get isAuthenticated =>
@@ -26,6 +27,7 @@ class AuthState extends Equatable {
     UserEntity? user,
     String? errorMessage,
     bool? passwordResetEmailSent,
+    bool? needsEmailConfirmation,
     bool clearUser = false,
     bool clearError = true,
   }) {
@@ -36,6 +38,7 @@ class AuthState extends Equatable {
           ? errorMessage
           : (errorMessage ?? this.errorMessage),
       passwordResetEmailSent: passwordResetEmailSent ?? false,
+      needsEmailConfirmation: needsEmailConfirmation ?? false,
     );
   }
 
@@ -45,5 +48,6 @@ class AuthState extends Equatable {
     user,
     errorMessage,
     passwordResetEmailSent,
+    needsEmailConfirmation,
   ];
 }

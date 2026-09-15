@@ -10,8 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LendingDetailPage extends StatefulWidget {
-  final LendingEntity record;
-  const LendingDetailPage({super.key, required this.record});
+  final String recordId;
+  const LendingDetailPage({super.key, required this.recordId});
 
   @override
   State<LendingDetailPage> createState() => _LendingDetailPageState();
@@ -28,7 +28,7 @@ class _LendingDetailPageState extends State<LendingDetailPage> {
 
   Future<List<LendingPaymentEntity>> _loadHistory() async {
     final repo = context.read<LendingRepository>();
-    final result = await repo.getPaymentHistory(widget.record.id);
+    final result = await repo.getPaymentHistory(widget.recordId);
     return result.fold((_) => [], (list) => list);
   }
 
@@ -36,7 +36,16 @@ class _LendingDetailPageState extends State<LendingDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final r = widget.record;
+    final records = context.watch<LendingBloc>().state.records;
+    final r = records.where((rec) => rec.id == widget.recordId).firstOrNull;
+
+    if (r == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Lending')),
+        body: const Center(child: Text('This record is no longer available.')),
+      );
+    }
+
     final isPaid = r.status == LendingStatus.paid;
 
     return Scaffold(

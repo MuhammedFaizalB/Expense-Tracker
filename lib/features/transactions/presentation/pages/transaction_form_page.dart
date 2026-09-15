@@ -31,6 +31,9 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
   String? _categoryId;
   late DateTime _date = widget.existing?.transactionDate ?? DateTime.now();
 
+  bool _submitting = false;
+  int _baselineActionId = 0;
+
   @override
   void initState() {
     super.initState();
@@ -63,12 +66,16 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
       updatedAt: now,
     );
 
+    setState(() {
+      _submitting = true;
+      _baselineActionId = context.read<TransactionBloc>().state.actionId;
+    });
+
     if (widget.existing != null) {
       context.read<TransactionBloc>().add(TransactionUpdated(entity));
     } else {
       context.read<TransactionBloc>().add(TransactionAdded(entity));
     }
-    Navigator.of(context).pop();
   }
 
   @override
@@ -87,98 +94,123 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
           widget.existing != null ? 'Edit Transaction' : 'Add Transaction',
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SegmentedButton<TransactionType>(
-                  segments: const [
-                    ButtonSegment(
-                      value: TransactionType.expense,
-                      label: Text('Expense'),
+      body: BlocListener<TransactionBloc, TransactionState>(
+        listener: (context, state) {
+          if (!_submitting) return;
+          if (state.actionId > _baselineActionId) {
+            Navigator.of(context).pop();
+          } else if (state.errorMessage != null) {
+            setState(() => _submitting = false);
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
+          }
+        },
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SegmentedButton<TransactionType>(
+                    segments: const [
+                      ButtonSegment(
+                        value: TransactionType.expense,
+                        label: Text('Expense'),
+                      ),
+                      ButtonSegment(
+                        value: TransactionType.income,
+                        label: Text('Income'),
+                      ),
+                    ],
+                    selected: {_type},
+                    onSelectionChanged: (s) => setState(() {
+                      _type = s.first;
+                      _categoryId = null;
+                    }),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _amountController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
                     ),
-                    ButtonSegment(
-                      value: TransactionType.income,
-                      label: Text('Income'),
+                    decoration: const InputDecoration(
+                      labelText: 'Amount',
+                      prefixText: '₹ ',
                     ),
-                  ],
-                  selected: {_type},
-                  onSelectionChanged: (s) => setState(() {
-                    _type = s.first;
-                    _categoryId = null;
-                  }),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _amountController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+                    validator: (v) {
+                      final n = double.tryParse(v ?? '');
+                      if (n == null || n <= 0) {
+                        return 'Enter an amount greater than zero';
+                      }
+                      return null;
+                    },
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Amount',
-                    prefixText: '₹ ',
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(labelText: 'Title'),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Enter a title'
+                        : null,
                   ),
-                  validator: (v) {
-                    final n = double.tryParse(v ?? '');
-                    if (n == null || n <= 0) {
-                      return 'Enter an amount greater than zero';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(labelText: 'Title'),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Enter a title' : null,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                DropdownButtonFormField<String>(
-                  initialValue: _categoryId,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                  items: categories
-                      .map(
-                        (c) =>
-                            DropdownMenuItem(value: c.id, child: Text(c.name)),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() => _categoryId = v),
-                  validator: (v) => v == null ? 'Select a category' : null,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _descController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (optional)',
+                  const SizedBox(height: AppSpacing.md),
+                  DropdownButtonFormField<String>(
+                    initialValue: _categoryId,
+                    decoration: const InputDecoration(labelText: 'Category'),
+                    items: categories
+                        .map(
+                          (c) => DropdownMenuItem(
+                            value: c.id,
+                            child: Text(c.name),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() => _categoryId = v),
+                    validator: (v) => v == null ? 'Select a category' : null,
                   ),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Date'),
-                  trailing: Text('${_date.day}/${_date.month}/${_date.year}'),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _date,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) setState(() => _date = picked);
-                  },
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                ElevatedButton(
-                  onPressed: _submit,
-                  child: const Text('Save Transaction'),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _descController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description (optional)',
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Date'),
+                    trailing: Text('${_date.day}/${_date.month}/${_date.year}'),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _date,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) setState(() => _date = picked);
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  ElevatedButton(
+                    onPressed: _submitting ? null : _submit,
+                    child: _submitting
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Save Transaction'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

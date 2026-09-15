@@ -81,6 +81,7 @@ class LendingBloc extends Bloc<LendingEvent, LendingState> {
         state.copyWith(
           records: [...state.records, created],
           errorMessage: null,
+          actionId: state.actionId + 1,
         ),
       ),
     );
@@ -99,6 +100,7 @@ class LendingBloc extends Bloc<LendingEvent, LendingState> {
               .map((r) => r.id == updated.id ? updated : r)
               .toList(),
           errorMessage: null,
+          actionId: state.actionId + 1,
         ),
       ),
     );
@@ -141,6 +143,7 @@ class LendingBloc extends Bloc<LendingEvent, LendingState> {
               .map((r) => r.id == updated.id ? updated : r)
               .toList(),
           errorMessage: null,
+          actionId: state.actionId + 1,
         ),
       ),
     );

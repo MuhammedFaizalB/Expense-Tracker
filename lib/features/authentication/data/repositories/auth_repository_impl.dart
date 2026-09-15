@@ -52,6 +52,8 @@ class AuthRepositoryImpl implements AuthRepository {
           displayName: displayName,
         );
         return Right(user);
+      } on EmailConfirmationRequiredException catch (e) {
+        return Left(EmailConfirmationRequiredFailure(e.message));
       } on AuthException catch (e) {
         return Left(AuthFailure(e.message));
       } catch (_) {

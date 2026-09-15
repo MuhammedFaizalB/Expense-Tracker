@@ -1,5 +1,6 @@
+import 'package:expense_tracker/core/error/exceptions.dart';
 import 'package:expense_tracker/features/authentication/data/models/user_model.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> login({required String email, required String password});
@@ -16,7 +17,7 @@ abstract class AuthRemoteDataSource {
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final SupabaseClient client;
+  final supa.SupabaseClient client;
   const AuthRemoteDataSourceImpl(this.client);
 
   @override
@@ -32,10 +33,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final user = res.user;
       if (user == null) throw const AuthException('Invalid email or password.');
       return UserModel.fromSupabase(user);
-    } on AuthApiException catch (e) {
-      throw AuthException(_friendlyMessage(e.message));
     } on AuthException {
       rethrow;
+    } on supa.AuthException catch (e) {
+      throw AuthException(_friendlyMessage(e));
     } catch (_) {
       throw const AuthException('Could not sign in. Please try again.');
     }
@@ -54,12 +55,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         data: displayName != null ? {'display_name': displayName} : null,
       );
       final user = res.user;
-      if (user == null) {
+      if (user == null)
         throw const AuthException('Registration failed. Please try again.');
+      if (res.session == null) {
+        throw const EmailConfirmationRequiredException();
       }
+
       return UserModel.fromSupabase(user);
-    } on AuthApiException catch (e) {
-      throw AuthException(_friendlyMessage(e.message));
+    } on EmailConfirmationRequiredException {
+      rethrow;
+    } on supa.AuthException catch (e) {
+      throw AuthException(_friendlyMessage(e));
     } catch (_) {
       throw const AuthException(
         'Could not create your account. Please try again.',
@@ -80,17 +86,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await client.auth.resetPasswordForEmail(email);
-    } on AuthApiException catch (e) {
-      throw AuthException(_friendlyMessage(e.message));
+    } on supa.AuthException catch (e) {
+      throw AuthException(_friendlyMessage(e));
     }
   }
 
   @override
   Future<void> updatePassword(String newPassword) async {
     try {
-      await client.auth.updateUser(UserAttributes(password: newPassword));
-    } on AuthApiException catch (e) {
-      throw AuthException(_friendlyMessage(e.message));
+      await client.auth.updateUser(supa.UserAttributes(password: newPassword));
+    } on supa.AuthException catch (e) {
+      throw AuthException(_friendlyMessage(e));
     }
   }
 
@@ -108,22 +114,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     });
   }
 
-  /// Supabase error strings are technically accurate but not user-friendly.
-  /// Translate the common ones; fall back to a generic message otherwise
-  /// so we never leak raw backend text to the UI.
-  String _friendlyMessage(String raw) {
-    final lower = raw.toLowerCase();
-    if (lower.contains('invalid login credentials')) {
+  String _friendlyMessage(supa.AuthException e) {
+    final code = e is supa.AuthApiException ? e.code?.toLowerCase() : null;
+    final lower = e.message.toLowerCase();
+
+    if (code == 'email_not_confirmed' ||
+        lower.contains('email not confirmed')) {
+      return 'Please verify your email before logging in.';
+    }
+    if (code == 'invalid_credentials' ||
+        lower.contains('invalid login credentials')) {
       return 'Incorrect email or password.';
     }
-    if (lower.contains('already registered') ||
+    if (code == 'user_already_exists' ||
+        lower.contains('already registered') ||
         lower.contains('already exists')) {
       return 'An account with this email already exists.';
     }
-    if (lower.contains('email not confirmed')) {
-      return 'Please verify your email before logging in.';
-    }
-    if (lower.contains('rate limit')) {
+    if (code == 'over_email_send_rate_limit' || lower.contains('rate limit')) {
       return 'Too many attempts. Please wait and try again.';
     }
     return 'Something went wrong. Please try again.';

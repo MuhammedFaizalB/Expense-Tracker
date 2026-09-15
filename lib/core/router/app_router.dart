@@ -8,12 +8,10 @@ import 'package:expense_tracker/features/authentication/presentation/pages/regis
 import 'package:expense_tracker/features/authentication/presentation/pages/splash_page.dart';
 import 'package:expense_tracker/features/categories/presentation/pages/categories_page.dart';
 import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
-import 'package:expense_tracker/features/lending/domain/entities/lending_entity.dart';
 import 'package:expense_tracker/features/lending/presentation/pages/lending_details_page.dart';
 import 'package:expense_tracker/features/lending/presentation/pages/lending_form_page.dart';
 import 'package:expense_tracker/features/lending/presentation/pages/lending_page.dart';
 import 'package:expense_tracker/features/settings/presentation/pages/settings_page.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_detail_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_form_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transactions_page.dart';
@@ -38,7 +36,6 @@ GoRouter buildRouter(AuthBloc authBloc) {
       if (status != AuthStatus.authenticated) {
         return loggingIn ? null : '/login';
       }
-      // Authenticated: keep users out of the auth pages and splash.
       if (loggingIn || onSplash) return '/dashboard';
       return null;
     },
@@ -79,7 +76,7 @@ GoRouter buildRouter(AuthBloc authBloc) {
                   GoRoute(
                     path: ':id',
                     builder: (context, state) => TransactionDetailPage(
-                      transaction: state.extra as TransactionEntity,
+                      transactionId: state.pathParameters['id']!,
                     ),
                   ),
                 ],
@@ -98,8 +95,9 @@ GoRouter buildRouter(AuthBloc authBloc) {
                   ),
                   GoRoute(
                     path: ':id',
-                    builder: (context, state) =>
-                        LendingDetailPage(record: state.extra as LendingEntity),
+                    builder: (context, state) => LendingDetailPage(
+                      recordId: state.pathParameters['id']!,
+                    ),
                   ),
                 ],
               ),

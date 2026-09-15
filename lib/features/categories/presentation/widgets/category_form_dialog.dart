@@ -1,6 +1,7 @@
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_entity.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_bloc.dart';
+import 'package:expense_tracker/features/categories/presentation/widgets/category_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,16 +15,6 @@ const _paletteColors = <int>[
   0xFF3A7CA5,
   0xFF9C4C6D,
 ];
-const _paletteIcons = <String, IconData>{
-  'category': Icons.category_outlined,
-  'restaurant': Icons.restaurant_outlined,
-  'shopping': Icons.shopping_bag_outlined,
-  'travel': Icons.flight_outlined,
-  'bills': Icons.receipt_long_outlined,
-  'health': Icons.favorite_outline,
-  'salary': Icons.payments_outlined,
-  'gift': Icons.card_giftcard_outlined,
-};
 
 class CategoryFormDialog extends StatefulWidget {
   final CategoryEntity? existing;
@@ -40,7 +31,7 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
   );
   late CategoryType _type =
       widget.existing?.type ?? widget.initialType ?? CategoryType.expense;
-  late String _icon = widget.existing?.icon ?? _paletteIcons.keys.first;
+  late String _icon = widget.existing?.icon ?? categoryIconMap.keys.first;
   late int _color = widget.existing?.color ?? _paletteColors.first;
 
   @override
@@ -74,7 +65,7 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
             const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: AppSpacing.sm,
-              children: _paletteIcons.entries.map((e) {
+              children: categoryIconMap.entries.map((e) {
                 final selected = e.key == _icon;
                 return ChoiceChip(
                   label: Icon(e.value, size: 18),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:expense_tracker/core/error/failures.dart';
 import 'package:expense_tracker/core/usecase.dart';
 import 'package:expense_tracker/features/authentication/domain/entities/user_entity.dart';
 import 'package:expense_tracker/features/authentication/domain/repositories/auth_repository.dart';
@@ -69,7 +70,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLoginRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(status: AuthStatus.loading));
+    emit(
+      state.copyWith(status: AuthStatus.loading, needsEmailConfirmation: false),
+    );
     final result = await loginUseCase(
       LoginParams(email: event.email, password: event.password),
     );
@@ -90,7 +93,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthRegisterRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(status: AuthStatus.loading));
+    emit(
+      state.copyWith(status: AuthStatus.loading, needsEmailConfirmation: false),
+    );
     final result = await registerUseCase(
       RegisterParams(
         email: event.email,
@@ -99,13 +104,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ),
     );
     result.fold(
-      (failure) => emit(
-        state.copyWith(
-          status: AuthStatus.failure,
-          errorMessage: failure.message,
-          clearError: false,
-        ),
-      ),
+      (failure) {
+        if (failure is EmailConfirmationRequiredFailure) {
+          emit(
+            state.copyWith(
+              status: AuthStatus.unauthenticated,
+              errorMessage: failure.message,
+              clearError: false,
+              needsEmailConfirmation: true,
+              clearUser: true,
+            ),
+          );
+        } else {
+          emit(
+            state.copyWith(
+              status: AuthStatus.failure,
+              errorMessage: failure.message,
+              clearError: false,
+            ),
+          );
+        }
+      },
       (user) =>
           emit(state.copyWith(status: AuthStatus.authenticated, user: user)),
     );
@@ -153,8 +172,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   void _onUserChanged(AuthUserChanged event, Emitter<AuthState> emit) {
     emit(
       event.user != null
-          ? state.copyWith(status: AuthStatus.authenticated, user: event.user)
-          : state.copyWith(status: AuthStatus.unauthenticated, clearUser: true),
+          ? state.copyWith(
+              status: AuthStatus.authenticated,
+              user: event.user,
+              needsEmailConfirmation: false,
+            )
+          : state.copyWith(
+              status: AuthStatus.unauthenticated,
+              clearUser: true,
+              needsEmailConfirmation: state.needsEmailConfirmation,
+            ),
     );
   }
 

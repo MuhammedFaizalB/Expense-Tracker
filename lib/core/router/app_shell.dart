@@ -1,4 +1,6 @@
+import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class AppShell extends StatelessWidget {
@@ -33,16 +35,23 @@ class AppShell extends StatelessWidget {
     ),
   ];
 
+  static const _dashboardTabIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
-        onTap: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
-        ),
+        onTap: (index) {
+          if (index == _dashboardTabIndex) {
+            context.read<DashboardBloc>().add(const DashboardLoadRequested());
+          }
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
+        },
         items: _destinations
             .map(
               (d) => BottomNavigationBarItem(
