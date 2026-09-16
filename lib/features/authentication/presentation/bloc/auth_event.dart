@@ -43,8 +43,13 @@ class AuthPasswordResetRequested extends AuthEvent {
   List<Object?> get props => [email];
 }
 
-/// Internal event fed by the authStateChanges stream subscription so the
-/// BLoC stays in sync if the session changes outside a direct user action.
+class AuthResendVerificationRequested extends AuthEvent {
+  final String email;
+  const AuthResendVerificationRequested(this.email);
+  @override
+  List<Object?> get props => [email];
+}
+
 class AuthUserChanged extends AuthEvent {
   final UserEntity? user;
   const AuthUserChanged(this.user);

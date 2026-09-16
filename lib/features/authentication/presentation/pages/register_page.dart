@@ -46,25 +46,14 @@ class _RegisterPageState extends State<RegisterPage> {
         listenWhen: (prev, curr) =>
             curr.status == AuthStatus.failure ||
             (curr.needsEmailConfirmation && !prev.needsEmailConfirmation),
-        listener: (context, state) async {
+        listener: (context, state) {
           if (state.needsEmailConfirmation) {
-            await showDialog<void>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Check your email'),
-                content: Text(
-                  state.errorMessage ??
-                      'Please verify your email before logging in.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('OK'),
-                  ),
-                ],
-              ),
+            context.go(
+              '/verify-email',
+              extra:
+                  state.pendingVerificationEmail ??
+                  _emailController.text.trim(),
             );
-            if (context.mounted) context.go('/login');
             return;
           }
           ScaffoldMessenger.of(context).showSnackBar(

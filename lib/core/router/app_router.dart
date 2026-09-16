@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/authentication/presentation/pages/forgo
 import 'package:expense_tracker/features/authentication/presentation/pages/login_page.dart';
 import 'package:expense_tracker/features/authentication/presentation/pages/register_page.dart';
 import 'package:expense_tracker/features/authentication/presentation/pages/splash_page.dart';
+import 'package:expense_tracker/features/authentication/presentation/pages/verify_email_page.dart';
 import 'package:expense_tracker/features/categories/presentation/pages/categories_page.dart';
 import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:expense_tracker/features/lending/presentation/pages/lending_details_page.dart';
@@ -27,6 +28,7 @@ GoRouter buildRouter(AuthBloc authBloc) {
       final loggingIn =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
+          state.matchedLocation == '/verify-email' ||
           state.matchedLocation == '/forgot-password';
       final onSplash = state.matchedLocation == '/splash';
 
@@ -45,6 +47,11 @@ GoRouter buildRouter(AuthBloc authBloc) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: '/verify-email',
+        builder: (context, state) =>
+            VerifyEmailPage(email: state.extra as String?),
       ),
       GoRoute(
         path: '/forgot-password',

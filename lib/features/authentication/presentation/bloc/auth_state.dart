@@ -11,12 +11,18 @@ class AuthState extends Equatable {
 
   final bool needsEmailConfirmation;
 
+  final String? pendingVerificationEmail;
+
+  final bool resendVerificationEmailSent;
+
   const AuthState({
     this.status = AuthStatus.initial,
     this.user,
     this.errorMessage,
     this.passwordResetEmailSent = false,
     this.needsEmailConfirmation = false,
+    this.pendingVerificationEmail,
+    this.resendVerificationEmailSent = false,
   });
 
   bool get isAuthenticated =>
@@ -28,6 +34,8 @@ class AuthState extends Equatable {
     String? errorMessage,
     bool? passwordResetEmailSent,
     bool? needsEmailConfirmation,
+    String? pendingVerificationEmail,
+    bool? resendVerificationEmailSent,
     bool clearUser = false,
     bool clearError = true,
   }) {
@@ -39,6 +47,9 @@ class AuthState extends Equatable {
           : (errorMessage ?? this.errorMessage),
       passwordResetEmailSent: passwordResetEmailSent ?? false,
       needsEmailConfirmation: needsEmailConfirmation ?? false,
+      pendingVerificationEmail:
+          pendingVerificationEmail ?? this.pendingVerificationEmail,
+      resendVerificationEmailSent: resendVerificationEmailSent ?? false,
     );
   }
 
@@ -49,5 +60,7 @@ class AuthState extends Equatable {
     errorMessage,
     passwordResetEmailSent,
     needsEmailConfirmation,
+    pendingVerificationEmail,
+    resendVerificationEmailSent,
   ];
 }

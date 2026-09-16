@@ -1,6 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:expense_tracker/core/network/network_info.dart';
 import 'package:expense_tracker/core/theme/theme_cubit.dart';
+import 'package:expense_tracker/features/authentication/domain/usecases/resend_verification_usecase.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -78,6 +79,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
   sl.registerLazySingleton(() => GetCurrentUserUseCase(sl()));
   sl.registerLazySingleton(() => SendPasswordResetUseCase(sl()));
+  sl.registerLazySingleton(() => ResendVerificationEmailUseCase(sl()));
   sl.registerLazySingleton(
     () => AuthBloc(
       loginUseCase: sl(),
@@ -85,6 +87,7 @@ Future<void> initDependencies() async {
       logoutUseCase: sl(),
       getCurrentUserUseCase: sl(),
       sendPasswordResetUseCase: sl(),
+      resendVerificationEmailUseCase: sl(),
       authRepository: sl(),
     ),
   );

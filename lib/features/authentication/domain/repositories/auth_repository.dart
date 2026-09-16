@@ -18,6 +18,8 @@ abstract class AuthRepository {
 
   Future<Either<Failure, void>> sendPasswordResetEmail(String email);
 
+  Future<Either<Failure, void>> resendVerificationEmail(String email);
+
   Future<Either<Failure, void>> updatePassword(String newPassword);
 
   Future<Either<Failure, UserEntity?>> getCurrentUser();

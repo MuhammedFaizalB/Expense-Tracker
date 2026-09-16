@@ -91,6 +91,20 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, void>> resendVerificationEmail(String email) {
+    return _requireConnection(() async {
+      try {
+        await remoteDataSource.resendVerificationEmail(email);
+        return const Right(null);
+      } on AuthException catch (e) {
+        return Left(AuthFailure(e.message));
+      } catch (_) {
+        return const Left(UnknownFailure());
+      }
+    });
+  }
+
+  @override
   Future<Either<Failure, void>> updatePassword(String newPassword) {
     return _requireConnection(() async {
       try {

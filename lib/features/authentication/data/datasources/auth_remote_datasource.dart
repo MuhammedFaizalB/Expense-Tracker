@@ -11,6 +11,7 @@ abstract class AuthRemoteDataSource {
   });
   Future<void> logout();
   Future<void> sendPasswordResetEmail(String email);
+  Future<void> resendVerificationEmail(String email);
   Future<void> updatePassword(String newPassword);
   UserModel? getCurrentUser();
   Stream<UserModel?> get authStateChanges;
@@ -55,8 +56,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         data: displayName != null ? {'display_name': displayName} : null,
       );
       final user = res.user;
-      if (user == null)
+      if (user == null) {
         throw const AuthException('Registration failed. Please try again.');
+      }
+
       if (res.session == null) {
         throw const EmailConfirmationRequiredException();
       }
@@ -88,6 +91,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       await client.auth.resetPasswordForEmail(email);
     } on supa.AuthException catch (e) {
       throw AuthException(_friendlyMessage(e));
+    }
+  }
+
+  @override
+  Future<void> resendVerificationEmail(String email) async {
+    try {
+      await client.auth.resend(type: supa.OtpType.signup, email: email);
+    } on supa.AuthException catch (e) {
+      throw AuthException(_friendlyMessage(e));
+    } catch (_) {
+      throw const AuthException(
+        'Could not resend the verification email. Please try again.',
+      );
     }
   }
 

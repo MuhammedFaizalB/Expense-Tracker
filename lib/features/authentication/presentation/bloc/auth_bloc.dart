@@ -9,6 +9,7 @@ import 'package:expense_tracker/features/authentication/domain/usecases/get_curr
 import 'package:expense_tracker/features/authentication/domain/usecases/login_usecase.dart';
 import 'package:expense_tracker/features/authentication/domain/usecases/logout_usecase.dart';
 import 'package:expense_tracker/features/authentication/domain/usecases/register_usecase.dart';
+import 'package:expense_tracker/features/authentication/domain/usecases/resend_verification_usecase.dart';
 import 'package:expense_tracker/features/authentication/domain/usecases/reset_password_usecase.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -21,6 +22,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LogoutUseCase logoutUseCase;
   final GetCurrentUserUseCase getCurrentUserUseCase;
   final SendPasswordResetUseCase sendPasswordResetUseCase;
+  final ResendVerificationEmailUseCase resendVerificationEmailUseCase;
   final AuthRepository authRepository;
 
   StreamSubscription<UserEntity?>? _authSubscription;
@@ -31,6 +33,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.logoutUseCase,
     required this.getCurrentUserUseCase,
     required this.sendPasswordResetUseCase,
+    required this.resendVerificationEmailUseCase,
     required this.authRepository,
   }) : super(const AuthState()) {
     on<AuthCheckRequested>(_onCheckRequested);
@@ -38,6 +41,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
+    on<AuthResendVerificationRequested>(_onResendVerificationRequested);
     on<AuthUserChanged>(_onUserChanged);
 
     _authSubscription = authRepository.authStateChanges.listen((user) {
@@ -166,6 +170,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ),
       ),
       (_) => emit(state.copyWith(passwordResetEmailSent: true)),
+    );
+  }
+
+  Future<void> _onResendVerificationRequested(
+    AuthResendVerificationRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final result = await resendVerificationEmailUseCase(
+      ResendVerificationParams(event.email),
+    );
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          errorMessage: failure.message,
+          clearError: false,
+          resendVerificationEmailSent: false,
+        ),
+      ),
+      (_) => emit(state.copyWith(resendVerificationEmailSent: true)),
     );
   }
 
