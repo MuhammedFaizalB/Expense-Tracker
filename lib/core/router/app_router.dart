@@ -32,7 +32,8 @@ GoRouter buildRouter(AuthBloc authBloc) {
           state.matchedLocation == '/forgot-password';
       final onSplash = state.matchedLocation == '/splash';
 
-      if (status == AuthStatus.initial || status == AuthStatus.loading) {
+      if (status == AuthStatus.initial ||
+          (status == AuthStatus.loading && onSplash)) {
         return onSplash ? null : '/splash';
       }
       if (status != AuthStatus.authenticated) {
