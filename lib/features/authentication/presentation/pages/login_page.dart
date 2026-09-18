@@ -38,8 +38,19 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
-        listenWhen: (prev, curr) => curr.status == AuthStatus.failure,
+        listenWhen: (prev, curr) =>
+            curr.status == AuthStatus.failure ||
+            (curr.needsEmailConfirmation && !prev.needsEmailConfirmation),
         listener: (context, state) {
+          if (state.needsEmailConfirmation) {
+            context.go(
+              '/verify-email',
+              extra:
+                  state.pendingVerificationEmail ??
+                  _emailController.text.trim(),
+            );
+            return;
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage ?? 'Something went wrong.'),

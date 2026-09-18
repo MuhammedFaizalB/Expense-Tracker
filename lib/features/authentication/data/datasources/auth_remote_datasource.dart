@@ -37,6 +37,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on AuthException {
       rethrow;
     } on supa.AuthException catch (e) {
+      if (_isEmailNotConfirmed(e)) {
+        throw const EmailConfirmationRequiredException(
+          'Please verify your email before logging in.',
+        );
+      }
       throw AuthException(_friendlyMessage(e));
     } catch (_) {
       throw const AuthException('Could not sign in. Please try again.');
@@ -130,12 +135,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     });
   }
 
+  bool _isEmailNotConfirmed(supa.AuthException e) {
+    final code = e is supa.AuthApiException ? e.code?.toLowerCase() : null;
+    return code == 'email_not_confirmed' ||
+        e.message.toLowerCase().contains('email not confirmed');
+  }
+
   String _friendlyMessage(supa.AuthException e) {
     final code = e is supa.AuthApiException ? e.code?.toLowerCase() : null;
     final lower = e.message.toLowerCase();
 
-    if (code == 'email_not_confirmed' ||
-        lower.contains('email not confirmed')) {
+    if (_isEmailNotConfirmed(e)) {
       return 'Please verify your email before logging in.';
     }
     if (code == 'invalid_credentials' ||

@@ -81,13 +81,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       LoginParams(email: event.email, password: event.password),
     );
     result.fold(
-      (failure) => emit(
-        state.copyWith(
-          status: AuthStatus.failure,
-          errorMessage: failure.message,
-          clearError: false,
-        ),
-      ),
+      (failure) {
+        if (failure is EmailConfirmationRequiredFailure) {
+          emit(
+            state.copyWith(
+              status: AuthStatus.unauthenticated,
+              errorMessage: failure.message,
+              clearError: false,
+              needsEmailConfirmation: true,
+              pendingVerificationEmail: event.email,
+              clearUser: true,
+            ),
+          );
+        } else {
+          emit(
+            state.copyWith(
+              status: AuthStatus.failure,
+              errorMessage: failure.message,
+              clearError: false,
+            ),
+          );
+        }
+      },
       (user) =>
           emit(state.copyWith(status: AuthStatus.authenticated, user: user)),
     );
@@ -116,6 +131,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               errorMessage: failure.message,
               clearError: false,
               needsEmailConfirmation: true,
+              pendingVerificationEmail: event.email,
               clearUser: true,
             ),
           );
