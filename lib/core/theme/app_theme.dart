@@ -11,9 +11,32 @@ class AppSpacing {
 }
 
 class AppRadius {
-  static const sm = 6.0;
-  static const md = 10.0;
-  static const lg = 14.0;
+  static const sm = 8.0;
+  static const md = 16.0;
+  static const lg = 22.0;
+  static const xl = 28.0;
+  static const pill = 999.0;
+}
+
+class AppEffects {
+  static List<BoxShadow> glow(
+    Color color, {
+    double blur = 24,
+    double opacity = 0.35,
+  }) => [
+    BoxShadow(
+      color: color.withValues(alpha: opacity),
+      blurRadius: blur,
+      spreadRadius: 1,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  static LinearGradient heroGradient(AppColors colors) => LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [colors.heroGradientStart, colors.heroGradientEnd],
+  );
 }
 
 class AppTheme {
@@ -25,12 +48,12 @@ class AppTheme {
     final textTheme = GoogleFonts.interTextTheme(base.textTheme).copyWith(
       headlineSmall: GoogleFonts.inter(
         fontSize: 24,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: colors.textPrimary,
       ),
       titleMedium: GoogleFonts.inter(
         fontSize: 16,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: colors.textPrimary,
       ),
       bodyLarge: GoogleFonts.inter(fontSize: 15, color: colors.textPrimary),
@@ -52,7 +75,7 @@ class AppTheme {
       ),
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
-        backgroundColor: colors.surface,
+        backgroundColor: colors.background,
         foregroundColor: colors.textPrimary,
         elevation: 0,
         centerTitle: false,
@@ -61,9 +84,9 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: colors.surface,
-        elevation: 0.5,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           side: BorderSide(color: colors.border, width: 1),
         ),
         margin: EdgeInsets.zero,
@@ -76,19 +99,19 @@ class AppTheme {
           vertical: AppSpacing.md,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: BorderSide(color: colors.border),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: BorderSide(color: colors.border),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(color: colors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(color: colors.error),
         ),
       ),
@@ -98,28 +121,28 @@ class AppTheme {
           foregroundColor: colors.onPrimary,
           elevation: 0,
           padding: const EdgeInsets.symmetric(
-            vertical: 14,
+            vertical: 16,
             horizontal: AppSpacing.lg,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.sm),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
           ),
           textStyle: GoogleFonts.inter(
             fontSize: 15,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: colors.primary,
-          side: BorderSide(color: colors.border),
+          side: BorderSide(color: colors.primary.withValues(alpha: 0.4)),
           padding: const EdgeInsets.symmetric(
             vertical: 14,
             horizontal: AppSpacing.lg,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.sm),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
           ),
         ),
       ),
@@ -128,19 +151,12 @@ class AppTheme {
         thickness: 1,
         space: 1,
       ),
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: colors.surface,
-        selectedItemColor: colors.primary,
-        unselectedItemColor: colors.textSecondary,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-      ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: colors.textPrimary,
         contentTextStyle: GoogleFonts.inter(color: colors.surface),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
       ),
       extensions: [colors],

@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/theme/theme_extensions.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_entity.dart';
+import 'package:expense_tracker/features/categories/presentation/widgets/category_icons.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 
@@ -21,27 +22,38 @@ class TransactionListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIncome = transaction.type == TransactionType.income;
-    final color = isIncome ? context.colors.income : context.colors.expense;
+    final amountColor = isIncome
+        ? context.colors.income
+        : context.colors.expense;
+    final iconColor = category != null ? Color(category!.color) : amountColor;
+    final icon = category != null
+        ? resolveCategoryIcon(category!.icon)
+        : (isIncome ? Icons.arrow_downward : Icons.arrow_upward);
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: ListTile(
         onTap: onTap,
         leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.12),
-          child: Icon(
-            isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-            color: color,
-            size: 18,
+          backgroundColor: iconColor.withValues(alpha: 0.14),
+
+          child: Icon(icon, color: iconColor, size: 18),
+        ),
+        title: Text(
+          transaction.title,
+          style: context.textStyles.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
           ),
         ),
-        title: Text(transaction.title),
         subtitle: Text(
           '${category?.name ?? 'Uncategorized'} · ${DateFormatter.dayMonth(transaction.transactionDate)}',
         ),
         trailing: Text(
           '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}',
-          style: context.textStyles.titleMedium?.copyWith(color: color),
+          style: context.textStyles.titleMedium?.copyWith(
+            color: amountColor,
+            fontSize: 14,
+          ),
         ),
       ),
     );

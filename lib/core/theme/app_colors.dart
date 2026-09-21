@@ -17,6 +17,13 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color income;
   final Color expense;
 
+  final Color heroHeader;
+
+  final Color heroGradientStart;
+  final Color heroGradientEnd;
+
+  final Color glow;
+
   const AppColors({
     required this.primary,
     required this.onPrimary,
@@ -33,42 +40,54 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.warning,
     required this.income,
     required this.expense,
+    required this.heroHeader,
+    required this.heroGradientStart,
+    required this.heroGradientEnd,
+    required this.glow,
   });
 
   static const light = AppColors(
-    primary: Color(0xFF1B3A5C),
+    primary: Color(0xFF22C55E),
     onPrimary: Color(0xFFFFFFFF),
-    secondary: Color(0xFF6B7280),
-    background: Color(0xFFF7F7F5),
+    secondary: Color(0xFF64748B),
+    background: Color(0xFFF6F9F8),
     surface: Color(0xFFFFFFFF),
-    surfaceVariant: Color(0xFFF0F0EE),
-    border: Color(0xFFE0E0DC),
-    textPrimary: Color(0xFF1A1A1A),
-    textSecondary: Color(0xFF5C5C5C),
-    textDisabled: Color(0xFFA0A0A0),
-    success: Color(0xFF1E7B4D),
-    error: Color(0xFFB3261E),
-    warning: Color(0xFFB86E00),
-    income: Color(0xFF1E7B4D),
-    expense: Color(0xFFB3261E),
+    surfaceVariant: Color(0xFFF0F4F3),
+    border: Color(0xFFE7ECEA),
+    textPrimary: Color(0xFF15211E),
+    textSecondary: Color(0xFF77897F),
+    textDisabled: Color(0xFFB9C4C1),
+    success: Color(0xFF22C55E),
+    error: Color(0xFFE0435C),
+    warning: Color(0xFFF59E0B),
+    income: Color(0xFF22C55E),
+    expense: Color(0xFFE0435C),
+    heroHeader: Color(0xFF0E1B26),
+    heroGradientStart: Color(0xFF1FE0A0),
+    heroGradientEnd: Color(0xFF0BA968),
+    glow: Color(0xFF22C55E),
   );
 
   static const dark = AppColors(
-    primary: Color(0xFF6E93B7),
-    onPrimary: Color(0xFF0B1420),
-    secondary: Color(0xFF9CA3AF),
-    background: Color(0xFF121212),
-    surface: Color(0xFF1C1C1E),
-    surfaceVariant: Color(0xFF262628),
-    border: Color(0xFF3A3A3C),
-    textPrimary: Color(0xFFF0F0F0),
-    textSecondary: Color(0xFFB0B0B0),
-    textDisabled: Color(0xFF6E6E6E),
-    success: Color(0xFF4FAE7C),
-    error: Color(0xFFE4736A),
-    warning: Color(0xFFE0A23B),
-    income: Color(0xFF4FAE7C),
-    expense: Color(0xFFE4736A),
+    primary: Color(0xFF34D399),
+    onPrimary: Color(0xFF04140F),
+    secondary: Color(0xFF93A6A0),
+    background: Color(0xFF0B1512),
+    surface: Color(0xFF13211D),
+    surfaceVariant: Color(0xFF1A2E28),
+    border: Color(0xFF223A33),
+    textPrimary: Color(0xFFF1F7F4),
+    textSecondary: Color(0xFFA6BAB4),
+    textDisabled: Color(0xFF56706A),
+    success: Color(0xFF34D399),
+    error: Color(0xFFFF6B81),
+    warning: Color(0xFFFFB25C),
+    income: Color(0xFF34D399),
+    expense: Color(0xFFFF6B81),
+    heroHeader: Color(0xFF071119),
+    heroGradientStart: Color(0xFF1FE0A0),
+    heroGradientEnd: Color(0xFF0A7A4E),
+    glow: Color(0xFF34D399),
   );
 
   @override
@@ -88,6 +107,10 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? warning,
     Color? income,
     Color? expense,
+    Color? heroHeader,
+    Color? heroGradientStart,
+    Color? heroGradientEnd,
+    Color? glow,
   }) {
     return AppColors(
       primary: primary ?? this.primary,
@@ -105,6 +128,10 @@ class AppColors extends ThemeExtension<AppColors> {
       warning: warning ?? this.warning,
       income: income ?? this.income,
       expense: expense ?? this.expense,
+      heroHeader: heroHeader ?? this.heroHeader,
+      heroGradientStart: heroGradientStart ?? this.heroGradientStart,
+      heroGradientEnd: heroGradientEnd ?? this.heroGradientEnd,
+      glow: glow ?? this.glow,
     );
   }
 
@@ -127,6 +154,14 @@ class AppColors extends ThemeExtension<AppColors> {
       warning: Color.lerp(warning, other.warning, t)!,
       income: Color.lerp(income, other.income, t)!,
       expense: Color.lerp(expense, other.expense, t)!,
+      heroHeader: Color.lerp(heroHeader, other.heroHeader, t)!,
+      heroGradientStart: Color.lerp(
+        heroGradientStart,
+        other.heroGradientStart,
+        t,
+      )!,
+      heroGradientEnd: Color.lerp(heroGradientEnd, other.heroGradientEnd, t)!,
+      glow: Color.lerp(glow, other.glow, t)!,
     );
   }
 }
