@@ -52,11 +52,14 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   @override
   Widget build(BuildContext context) {
     final email = _email;
+    final colors = context.colors;
 
     return Scaffold(
+      backgroundColor: colors.heroHeader,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => context.go('/login'),
         ),
       ),
@@ -85,15 +88,32 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.mark_email_unread_outlined,
-                  size: 56,
-                  color: context.colors.primary,
+                Container(
+                  width: 84,
+                  height: 84,
+                  decoration: BoxDecoration(
+                    color: colors.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: AppEffects.glow(
+                      colors.glow,
+                      blur: 28,
+                      opacity: 0.45,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.mark_email_unread_rounded,
+                    size: 40,
+                    color: Colors.white,
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
+                const SizedBox(height: AppSpacing.xl),
+                const Text(
                   'Verify your email',
-                  style: context.textStyles.headlineSmall,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -101,14 +121,17 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                   email != null
                       ? "We've sent a verification link to $email. Click the link, then come back and log in."
                       : "We've sent a verification link to your email. Click the link, then come back and log in.",
-                  style: context.textStyles.bodyMedium,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.65),
+                    fontSize: 13,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     final onCooldown = _secondsRemaining > 0;
-                    return OutlinedButton(
+                    return ElevatedButton(
                       onPressed: (onCooldown || email == null) ? null : _resend,
                       child: Text(
                         onCooldown
@@ -121,6 +144,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                 const SizedBox(height: AppSpacing.md),
                 TextButton(
                   onPressed: () => context.go('/login'),
+                  style: TextButton.styleFrom(foregroundColor: Colors.white),
                   child: const Text('Back to Login'),
                 ),
               ],

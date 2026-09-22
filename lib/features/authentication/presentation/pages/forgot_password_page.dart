@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/authentication/presentation/widgets/auth_hero_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -17,7 +18,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Reset password')),
       body: BlocConsumer<AuthBloc, AuthState>(
         listenWhen: (prev, curr) =>
             curr.passwordResetEmailSent != prev.passwordResetEmailSent ||
@@ -37,39 +37,60 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         },
         builder: (context, state) {
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      "Enter your account email and we'll send you a link to reset your password.",
-                      style: Theme.of(context).textTheme.bodyMedium,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const AuthHeroPanel(
+                    icon: Icons.lock_reset_rounded,
+                    title: 'Reset password',
+                    subtitle: "We'll email you a link to get back in",
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.xl,
+                      AppSpacing.lg,
+                      AppSpacing.lg,
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(labelText: 'Email'),
-                      validator: (v) => (v == null || !v.contains('@'))
-                          ? 'Enter a valid email'
-                          : null,
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            "Enter your account email and we'll send you a link to reset your password.",
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: const InputDecoration(
+                              labelText: 'Email',
+                            ),
+                            validator: (v) => (v == null || !v.contains('@'))
+                                ? 'Enter a valid email'
+                                : null,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                context.read<AuthBloc>().add(
+                                  AuthPasswordResetRequested(
+                                    _emailController.text,
+                                  ),
+                                );
+                              }
+                            },
+                            child: const Text('Send reset link'),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          context.read<AuthBloc>().add(
-                            AuthPasswordResetRequested(_emailController.text),
-                          );
-                        }
-                      },
-                      child: const Text('Send reset link'),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           );

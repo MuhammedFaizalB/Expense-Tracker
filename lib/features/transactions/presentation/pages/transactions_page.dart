@@ -1,5 +1,5 @@
+import 'package:expense_tracker/core/theme/app_section_header.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
-import 'package:expense_tracker/core/theme/theme_extensions.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_bloc.dart';
@@ -58,75 +58,27 @@ class _TransactionsPageState extends State<TransactionsPage> {
       ),
       body: Column(
         children: [
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: context.colors.heroHeader,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(AppRadius.xl),
-                bottomRight: Radius.circular(AppRadius.xl),
+          AppSectionHeader(
+            title: 'Transactions',
+            trailing: AppHeaderIconButton(
+              icon: Icons.tune,
+              onTap: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => const TransactionFilterSheet(),
               ),
             ),
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.md,
-              AppSpacing.lg,
-              AppSpacing.lg,
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Transactions',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.tune, color: Colors.white),
-                        onPressed: () => showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (_) => const TransactionFilterSheet(),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                    ),
-                    child: Row(
-                      children: [
-                        _PillTab(
-                          label: 'All',
-                          selected: activeType == null,
-                          onTap: () => _setTypeFilter(null),
-                        ),
-                        _PillTab(
-                          label: 'Income',
-                          selected: activeType == TransactionType.income,
-                          onTap: () => _setTypeFilter(TransactionType.income),
-                        ),
-                        _PillTab(
-                          label: 'Expenses',
-                          selected: activeType == TransactionType.expense,
-                          onTap: () => _setTypeFilter(TransactionType.expense),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+            child: AppHeaderPillTabs(
+              labels: const ['All', 'Income', 'Expenses'],
+              selectedIndex: activeType == null
+                  ? 0
+                  : (activeType == TransactionType.income ? 1 : 2),
+              onChanged: (i) => _setTypeFilter(
+                i == 0
+                    ? null
+                    : (i == 1
+                          ? TransactionType.income
+                          : TransactionType.expense),
               ),
             ),
           ),
@@ -197,45 +149,6 @@ class _TransactionsPageState extends State<TransactionsPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PillTab extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _PillTab({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? context.colors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.6),
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/theme/app_section_header.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_entity.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_bloc.dart';
@@ -13,9 +14,8 @@ class CategoriesPage extends StatefulWidget {
   State<CategoriesPage> createState() => _CategoriesPageState();
 }
 
-class _CategoriesPageState extends State<CategoriesPage>
-    with SingleTickerProviderStateMixin {
-  late final _tabController = TabController(length: 2, vsync: this);
+class _CategoriesPageState extends State<CategoriesPage> {
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -26,41 +26,46 @@ class _CategoriesPageState extends State<CategoriesPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Categories'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Expense'),
-            Tab(text: 'Income'),
-          ],
-        ),
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => showDialog(
           context: context,
           builder: (_) => CategoryFormDialog(
-            initialType: _tabController.index == 0
+            initialType: _selectedIndex == 0
                 ? CategoryType.expense
                 : CategoryType.income,
           ),
         ),
         child: const Icon(Icons.add),
       ),
-      body: BlocBuilder<CategoryBloc, CategoryState>(
-        builder: (context, state) {
-          if (state.status == CategoryStatusUi.loading ||
-              state.status == CategoryStatusUi.initial) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _CategoryGrid(categories: state.expense),
-              _CategoryGrid(categories: state.income),
-            ],
-          );
-        },
+      body: Column(
+        children: [
+          AppSectionHeader(
+            title: 'Categories',
+            child: AppHeaderPillTabs(
+              labels: const ['Expense', 'Income'],
+              selectedIndex: _selectedIndex,
+              onChanged: (i) => setState(() => _selectedIndex = i),
+            ),
+          ),
+          Expanded(
+            child: BlocBuilder<CategoryBloc, CategoryState>(
+              builder: (context, state) {
+                if (state.status == CategoryStatusUi.loading ||
+                    state.status == CategoryStatusUi.initial) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return IndexedStack(
+                  index: _selectedIndex,
+                  sizing: StackFit.expand,
+                  children: [
+                    _CategoryGrid(categories: state.expense),
+                    _CategoryGrid(categories: state.income),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

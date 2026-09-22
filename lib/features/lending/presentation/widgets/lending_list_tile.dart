@@ -25,6 +25,14 @@ class LendingListTile extends StatelessWidget {
           horizontal: AppSpacing.md,
           vertical: AppSpacing.xs,
         ),
+        leading: CircleAvatar(
+          backgroundColor: amountColor.withValues(alpha: 0.14),
+          child: Icon(
+            isLent ? Icons.call_received : Icons.call_made,
+            color: amountColor,
+            size: 18,
+          ),
+        ),
         title: Text(record.personName, style: context.textStyles.titleMedium),
         subtitle: Row(
           children: [

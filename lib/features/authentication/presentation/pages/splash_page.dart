@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/core/theme/theme_extensions.dart';
 import 'package:expense_tracker/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:flutter/material.dart';
@@ -14,36 +15,47 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    // go_router's redirect (see app_router.dart) reacts to AuthBloc state
-    // changes, so simply kicking off the session check is enough — no
-    // manual navigation call needed here.
     context.read<AuthBloc>().add(const AuthCheckRequested());
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: context.colors.primary,
+      backgroundColor: colors.heroHeader,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.account_balance_wallet_outlined,
-              size: 56,
-              color: context.colors.onPrimary,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Money Manager',
-              style: TextStyle(
-                color: context.colors.onPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+            Container(
+              width: 84,
+              height: 84,
+              decoration: BoxDecoration(
+                color: colors.primary,
+                shape: BoxShape.circle,
+                boxShadow: AppEffects.glow(
+                  colors.glow,
+                  blur: 28,
+                  opacity: 0.45,
+                ),
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet_rounded,
+                size: 40,
+                color: Colors.white,
               ),
             ),
-            const SizedBox(height: 24),
-            CircularProgressIndicator(color: context.colors.onPrimary),
+            const SizedBox(height: 20),
+            const Text(
+              'Money Manager',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 28),
+            CircularProgressIndicator(color: colors.primary),
           ],
         ),
       ),

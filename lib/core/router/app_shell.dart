@@ -51,48 +51,50 @@ class AppShell extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: Theme.of(sheetContext).scaffoldBackgroundColor,
+        child: Material(
+          color: Theme.of(sheetContext).scaffoldBackgroundColor,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.lg),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: sheetContext.colors.primary.withValues(
-                    alpha: 0.15,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: sheetContext.colors.primary.withValues(
+                      alpha: 0.15,
+                    ),
+                    child: Icon(
+                      Icons.receipt_long_outlined,
+                      color: sheetContext.colors.primary,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.receipt_long_outlined,
-                    color: sheetContext.colors.primary,
-                  ),
+                  title: const Text('Add Transaction'),
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    context.go('/transactions/add');
+                  },
                 ),
-                title: const Text('Add Transaction'),
-                onTap: () {
-                  Navigator.of(sheetContext).pop();
-                  context.go('/transactions/add');
-                },
-              ),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: sheetContext.colors.primary.withValues(
-                    alpha: 0.15,
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: sheetContext.colors.primary.withValues(
+                      alpha: 0.15,
+                    ),
+                    child: Icon(
+                      Icons.handshake_outlined,
+                      color: sheetContext.colors.primary,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.handshake_outlined,
-                    color: sheetContext.colors.primary,
-                  ),
+                  title: const Text('Add Lending Record'),
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    context.go('/lending/add');
+                  },
                 ),
-                title: const Text('Add Lending Record'),
-                onTap: () {
-                  Navigator.of(sheetContext).pop();
-                  context.go('/lending/add');
-                },
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/theme/app_section_header.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/core/theme/theme_cubit.dart';
 import 'package:expense_tracker/features/authentication/presentation/bloc/auth_bloc.dart';
@@ -25,77 +26,83 @@ class _SettingsPageState extends State<SettingsPage> {
     final email = context.watch<AuthBloc>().state.user?.email ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      body: Column(
         children: [
-          const _SectionHeader('Appearance'),
-          const _AppearanceSelector(),
-          const Divider(height: AppSpacing.lg),
-          const _SectionHeader('Categories'),
-          ListTile(
-            leading: const Icon(Icons.category_outlined),
-            title: const Text('Manage categories'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/categories'),
-          ),
-          const Divider(height: AppSpacing.lg),
-          const _SectionHeader('Account'),
-          ListTile(
-            leading: const Icon(Icons.email_outlined),
-            title: const Text('Email'),
-            subtitle: Text(email),
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Logout'),
-            onTap: () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Log out?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('Logout'),
-                    ),
-                  ],
+          AppSectionHeader(title: 'Settings', subtitle: email),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              children: [
+                const _SectionHeader('Appearance'),
+                const _AppearanceSelector(),
+                const Divider(height: AppSpacing.lg),
+                const _SectionHeader('Categories'),
+                ListTile(
+                  leading: const Icon(Icons.category_outlined),
+                  title: const Text('Manage categories'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/categories'),
                 ),
-              );
-              if (confirmed == true && context.mounted) {
-                context.read<AuthBloc>().add(const AuthLogoutRequested());
-              }
-            },
-          ),
-          const Divider(height: AppSpacing.lg),
-          const _SectionHeader('About'),
-          BlocBuilder<SettingsBloc, SettingsState>(
-            builder: (context, state) {
-              return ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: const Text('App Version'),
-                subtitle: Text(
-                  state.status == SettingsStatusUi.success &&
-                          state.appInfo != null
-                      ? '${state.appInfo!.version} (${state.appInfo!.buildNumber})'
-                      : '—',
+                const Divider(height: AppSpacing.lg),
+                const _SectionHeader('Account'),
+                ListTile(
+                  leading: const Icon(Icons.email_outlined),
+                  title: const Text('Email'),
+                  subtitle: Text(email),
                 ),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined),
-            title: const Text('Privacy Policy'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: const Text('Terms'),
-            onTap: () {},
+                ListTile(
+                  leading: const Icon(Icons.logout),
+                  title: const Text('Logout'),
+                  onTap: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Log out?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Logout'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true && context.mounted) {
+                      context.read<AuthBloc>().add(const AuthLogoutRequested());
+                    }
+                  },
+                ),
+                const Divider(height: AppSpacing.lg),
+                const _SectionHeader('About'),
+                BlocBuilder<SettingsBloc, SettingsState>(
+                  builder: (context, state) {
+                    return ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: const Text('App Version'),
+                      subtitle: Text(
+                        state.status == SettingsStatusUi.success &&
+                                state.appInfo != null
+                            ? '${state.appInfo!.version} (${state.appInfo!.buildNumber})'
+                            : '—',
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.privacy_tip_outlined),
+                  title: const Text('Privacy Policy'),
+                  onTap: () {},
+                ),
+                ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: const Text('Terms'),
+                  onTap: () {},
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -130,21 +137,18 @@ class _AppearanceSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final current = context.watch<ThemeCubit>().state;
-    return Column(
-      children: AppThemeMode.values.map((mode) {
-        return RadioListTile<AppThemeMode>(
-          value: mode,
-          groupValue: current,
-          title: Text(switch (mode) {
-            AppThemeMode.system => 'System',
-            AppThemeMode.light => 'Light',
-            AppThemeMode.dark => 'Dark',
-          }),
-          onChanged: (v) {
-            if (v != null) context.read<ThemeCubit>().setThemeMode(v);
-          },
-        );
-      }).toList(),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: SegmentedButton<AppThemeMode>(
+        segments: const [
+          ButtonSegment(value: AppThemeMode.light, label: Text('Light')),
+          ButtonSegment(value: AppThemeMode.dark, label: Text('Dark')),
+          ButtonSegment(value: AppThemeMode.system, label: Text('System')),
+        ],
+        selected: {current},
+        onSelectionChanged: (s) =>
+            context.read<ThemeCubit>().setThemeMode(s.first),
+      ),
     );
   }
 }
