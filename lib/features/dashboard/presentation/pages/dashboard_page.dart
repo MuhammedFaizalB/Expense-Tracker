@@ -23,6 +23,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     context.read<DashboardBloc>().add(const DashboardLoadRequested());
+    context.read<TransactionBloc>().add(const TransactionLoadRequested());
   }
 
   String get _greeting {
@@ -81,6 +82,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     balance: summary.balance,
                     income: summary.totalIncome,
                     expense: summary.totalExpense,
+                    onWalletTap: () => context.go('/transactions'),
                   ),
                 ),
                 SliverPadding(

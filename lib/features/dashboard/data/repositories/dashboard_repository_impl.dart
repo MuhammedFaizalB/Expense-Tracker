@@ -18,7 +18,14 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
   @override
   Future<Either<Failure, DashboardSummary>> getDashboardSummary() async {
-    final totalsResult = await transactionRepository.getTotals();
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfMonth = DateTime(now.year, now.month + 1, 0);
+
+    final totalsResult = await transactionRepository.getTotals(
+      start: startOfMonth,
+      end: endOfMonth,
+    );
     final recentTxResult = await transactionRepository.getTransactions(
       const TransactionFilter(sort: TransactionSort.dateDesc),
     );

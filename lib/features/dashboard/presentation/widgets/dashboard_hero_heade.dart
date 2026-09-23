@@ -9,6 +9,7 @@ class DashboardHeroHeader extends StatelessWidget {
   final double income;
   final double expense;
   final VoidCallback? onNotificationTap;
+  final VoidCallback? onWalletTap;
 
   const DashboardHeroHeader({
     super.key,
@@ -17,6 +18,7 @@ class DashboardHeroHeader extends StatelessWidget {
     required this.income,
     required this.expense,
     this.onNotificationTap,
+    this.onWalletTap,
   });
 
   @override
@@ -71,7 +73,12 @@ class DashboardHeroHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          _BalanceCard(balance: balance, income: income, expense: expense),
+          _BalanceCard(
+            balance: balance,
+            income: income,
+            expense: expense,
+            onWalletTap: onWalletTap,
+          ),
         ],
       ),
     );
@@ -101,15 +108,27 @@ class _IconBadge extends StatelessWidget {
   }
 }
 
-class _BalanceCard extends StatelessWidget {
+class _BalanceCard extends StatefulWidget {
   final double balance;
   final double income;
   final double expense;
+  final VoidCallback? onWalletTap;
   const _BalanceCard({
     required this.balance,
     required this.income,
     required this.expense,
+    this.onWalletTap,
   });
+
+  @override
+  State<_BalanceCard> createState() => _BalanceCardState();
+}
+
+class _BalanceCardState extends State<_BalanceCard> {
+  bool _isVisible = true;
+
+  String _display(double amount) =>
+      _isVisible ? CurrencyFormatter.format(amount) : '••••••';
 
   @override
   Widget build(BuildContext context) {
@@ -137,31 +156,44 @@ class _BalanceCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Icon(
-                    Icons.visibility_outlined,
-                    color: Colors.white.withValues(alpha: 0.75),
-                    size: 16,
+                  InkWell(
+                    onTap: () => setState(() => _isVisible = !_isVisible),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    child: Padding(
+                      padding: const EdgeInsets.all(2),
+                      child: Icon(
+                        _isVisible
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: Colors.white.withValues(alpha: 0.75),
+                        size: 16,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet_outlined,
-                  color: Colors.white,
-                  size: 17,
+              InkWell(
+                onTap: widget.onWalletTap,
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.account_balance_wallet_outlined,
+                    color: Colors.white,
+                    size: 17,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            CurrencyFormatter.format(balance),
+            _display(widget.balance),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 30,
@@ -172,10 +204,16 @@ class _BalanceCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _MiniStat(label: 'Income', amount: income),
+                child: _MiniStat(
+                  label: 'Income',
+                  text: _display(widget.income),
+                ),
               ),
               Expanded(
-                child: _MiniStat(label: 'Expenses', amount: expense),
+                child: _MiniStat(
+                  label: 'Expenses',
+                  text: _display(widget.expense),
+                ),
               ),
             ],
           ),
@@ -187,8 +225,8 @@ class _BalanceCard extends StatelessWidget {
 
 class _MiniStat extends StatelessWidget {
   final String label;
-  final double amount;
-  const _MiniStat({required this.label, required this.amount});
+  final String text;
+  const _MiniStat({required this.label, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -204,7 +242,7 @@ class _MiniStat extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          CurrencyFormatter.format(amount),
+          text,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 15,

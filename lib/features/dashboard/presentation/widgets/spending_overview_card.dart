@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/categories/domain/entities/category_ent
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class _CategorySlice {
   final String name;
@@ -17,7 +18,7 @@ class _CategorySlice {
   });
 }
 
-class SpendingOverviewCard extends StatelessWidget {
+class SpendingOverviewCard extends StatefulWidget {
   final List<TransactionEntity> transactions;
   final List<CategoryEntity> categories;
 
@@ -27,6 +28,11 @@ class SpendingOverviewCard extends StatelessWidget {
     required this.categories,
   });
 
+  @override
+  State<SpendingOverviewCard> createState() => _SpendingOverviewCardState();
+}
+
+class _SpendingOverviewCardState extends State<SpendingOverviewCard> {
   static const _fallbackPalette = [
     Color(0xFF22C55E),
     Color(0xFF3B82F6),
@@ -36,11 +42,31 @@ class SpendingOverviewCard extends StatelessWidget {
     Color(0xFF06B6D4),
   ];
 
+  late DateTime _selectedMonth = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    1,
+  );
+
+  List<DateTime> get _availableMonths {
+    final now = DateTime.now();
+    return List.generate(12, (i) => DateTime(now.year, now.month - i, 1));
+  }
+
+  String _monthLabel(DateTime month) {
+    final now = DateTime.now();
+    if (month.year == now.year && month.month == now.month) return 'This Month';
+    return DateFormat('MMMM yyyy').format(month);
+  }
+
   List<_CategorySlice> _computeSlices() {
-    final categoriesById = {for (final c in categories) c.id: c};
+    final categoriesById = {for (final c in widget.categories) c.id: c};
     final totals = <String, double>{};
-    for (final t in transactions.where(
-      (t) => t.type == TransactionType.expense,
+    for (final t in widget.transactions.where(
+      (t) =>
+          t.type == TransactionType.expense &&
+          t.transactionDate.year == _selectedMonth.year &&
+          t.transactionDate.month == _selectedMonth.month,
     )) {
       totals.update(
         t.categoryId,
@@ -69,20 +95,6 @@ class SpendingOverviewCard extends StatelessWidget {
     final slices = _computeSlices();
     final total = slices.fold(0.0, (sum, s) => sum + s.amount);
 
-    if (slices.isEmpty) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Center(
-            child: Text(
-              'No expenses yet this month',
-              style: context.textStyles.bodyMedium,
-            ),
-          ),
-        ),
-      );
-    }
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -96,110 +108,137 @@ class SpendingOverviewCard extends StatelessWidget {
                   'Spending Overview',
                   style: context.textStyles.titleMedium,
                 ),
-                Row(
-                  children: [
-                    Text('This Month', style: context.textStyles.bodyMedium),
-                    Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 16,
-                      color: context.colors.textSecondary,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                SizedBox(
-                  height: 130,
-                  width: 130,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      PieChart(
-                        PieChartData(
-                          sections: slices
-                              .map(
-                                (s) => PieChartSectionData(
-                                  value: s.amount,
-                                  color: s.color,
-                                  radius: 18,
-                                  showTitle: false,
-                                ),
-                              )
-                              .toList(),
-                          sectionsSpace: 2,
-                          centerSpaceRadius: 42,
+                PopupMenuButton<DateTime>(
+                  initialValue: _selectedMonth,
+                  onSelected: (month) => setState(() => _selectedMonth = month),
+                  itemBuilder: (context) => _availableMonths
+                      .map(
+                        (m) => PopupMenuItem(
+                          value: m,
+                          child: Text(_monthLabel(m)),
                         ),
+                      )
+                      .toList(),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _monthLabel(_selectedMonth),
+                        style: context.textStyles.bodyMedium,
                       ),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            CurrencyFormatter.formatPlain(total),
-                            style: context.textStyles.titleMedium?.copyWith(
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            'Total Spent',
-                            style: context.textStyles.bodyMedium?.copyWith(
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
+                      Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 16,
+                        color: context.colors.textSecondary,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: slices.map((s) {
-                      final pct = total == 0
-                          ? 0
-                          : (s.amount / total * 100).round();
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 3),
-                        child: Row(
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            if (slices.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                child: Center(
+                  child: Text(
+                    'No expenses in ${_monthLabel(_selectedMonth)}',
+                    style: context.textStyles.bodyMedium,
+                  ),
+                ),
+              )
+            else
+              Row(
+                children: [
+                  SizedBox(
+                    height: 130,
+                    width: 130,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        PieChart(
+                          PieChartData(
+                            sections: slices
+                                .map(
+                                  (s) => PieChartSectionData(
+                                    value: s.amount,
+                                    color: s.color,
+                                    radius: 18,
+                                    showTitle: false,
+                                  ),
+                                )
+                                .toList(),
+                            sectionsSpace: 2,
+                            centerSpaceRadius: 42,
+                          ),
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: s.color,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                s.name,
-                                style: context.textStyles.bodyMedium,
-                                overflow: TextOverflow.ellipsis,
+                            Text(
+                              CurrencyFormatter.formatPlain(total),
+                              style: context.textStyles.titleMedium?.copyWith(
+                                fontSize: 16,
                               ),
                             ),
                             Text(
-                              '$pct%  ',
-                              style: context.textStyles.bodyMedium,
-                            ),
-                            Text(
-                              CurrencyFormatter.formatPlain(s.amount),
+                              'Total Spent',
                               style: context.textStyles.bodyMedium?.copyWith(
-                                color: context.colors.textPrimary,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
                               ),
                             ),
                           ],
                         ),
-                      );
-                    }).toList(),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: slices.map((s) {
+                        final pct = total == 0
+                            ? 0
+                            : (s.amount / total * 100).round();
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 3),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: s.color,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  s.name,
+                                  style: context.textStyles.bodyMedium,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Text(
+                                '$pct%  ',
+                                style: context.textStyles.bodyMedium,
+                              ),
+                              Text(
+                                CurrencyFormatter.formatPlain(s.amount),
+                                style: context.textStyles.bodyMedium?.copyWith(
+                                  color: context.colors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),

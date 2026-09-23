@@ -130,6 +130,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       child: ListView(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         children: [
+                          MonthlySummaryCard(transactions: state.transactions),
+                          const SizedBox(height: AppSpacing.sm),
                           ...state.transactions.map(
                             (t) => TransactionListTile(
                               transaction: t,
@@ -138,8 +140,6 @@ class _TransactionsPageState extends State<TransactionsPage> {
                                   context.push('/transactions/${t.id}'),
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.sm),
-                          MonthlySummaryCard(transactions: state.transactions),
                         ],
                       ),
                     );
