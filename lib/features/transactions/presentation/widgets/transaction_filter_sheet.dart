@@ -26,7 +26,26 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Filter & Sort', style: Theme.of(context).textTheme.titleMedium),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Filter & Sort',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              TextButton(
+                onPressed: () => setState(
+                  () => _draft = _draft.copyWith(
+                    clearType: true,
+                    clearCategory: true,
+                    clearDates: true,
+                    sort: TransactionSort.dateDesc,
+                  ),
+                ),
+                child: const Text('Clear Filters'),
+              ),
+            ],
+          ),
           const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.sm,

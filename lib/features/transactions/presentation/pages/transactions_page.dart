@@ -91,10 +91,23 @@ class _TransactionsPageState extends State<TransactionsPage> {
             ),
             child: TextField(
               controller: _searchController,
-              onChanged: _applySearch,
-              decoration: const InputDecoration(
+              onChanged: (v) {
+                _applySearch(v);
+                setState(() {});
+              },
+              decoration: InputDecoration(
                 hintText: 'Search transactions',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _applySearch('');
+                          setState(() {});
+                        },
+                      ),
               ),
             ),
           ),
@@ -130,8 +143,12 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       child: ListView(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         children: [
-                          MonthlySummaryCard(transactions: state.transactions),
-                          const SizedBox(height: AppSpacing.sm),
+                          if (activeType != TransactionType.income) ...[
+                            MonthlySummaryCard(
+                              transactions: state.transactions,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                          ],
                           ...state.transactions.map(
                             (t) => TransactionListTile(
                               transaction: t,

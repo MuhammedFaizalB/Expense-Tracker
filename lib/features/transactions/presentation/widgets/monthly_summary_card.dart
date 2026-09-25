@@ -28,59 +28,70 @@ class MonthlySummaryCard extends StatelessWidget {
         ? null
         : ((thisMonthTotal - lastMonthTotal) / lastMonthTotal * 100);
     final isHigher = (pctChange ?? 0) >= 0;
+    final colors = context.colors;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: context.colors.primary,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.attach_money, color: Colors.white),
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        gradient: AppEffects.heroGradient(colors),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        boxShadow: AppEffects.glow(colors.glow),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Monthly Summary', style: context.textStyles.bodyMedium),
-                  Text(
-                    "You're spending ${CurrencyFormatter.format(thisMonthTotal)} this month",
-                    style: context.textStyles.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+            child: const Icon(Icons.attach_money, color: Colors.white),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Monthly Summary',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.75),
+                    fontSize: 12,
                   ),
-                  if (pctChange != null) ...[
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(
-                          isHigher ? Icons.arrow_upward : Icons.arrow_downward,
-                          size: 12,
-                          color: isHigher
-                              ? context.colors.expense
-                              : context.colors.income,
+                ),
+                Text(
+                  "You're spending ${CurrencyFormatter.format(thisMonthTotal)} this month",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+                if (pctChange != null) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        isHigher ? Icons.arrow_upward : Icons.arrow_downward,
+                        size: 12,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        '${pctChange.abs().toStringAsFixed(0)}% ${isHigher ? 'higher' : 'lower'} than last month',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.75),
+                          fontSize: 11,
                         ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${pctChange.abs().toStringAsFixed(0)}% ${isHigher ? 'higher' : 'lower'} than last month',
-                          style: context.textStyles.bodyMedium?.copyWith(
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
