@@ -1,6 +1,7 @@
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/lending/domain/entities/lending_entity.dart';
+import 'package:expense_tracker/features/lending/domain/repositories/lending_repository.dart';
 import 'package:expense_tracker/features/lending/presentation/bloc/lending_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,7 +9,14 @@ import 'package:uuid/uuid.dart';
 
 class LendingFormPage extends StatefulWidget {
   final LendingEntity? existing;
-  const LendingFormPage({super.key, this.existing});
+  final String? contactId;
+  final String? personName;
+  const LendingFormPage({
+    super.key,
+    this.existing,
+    this.contactId,
+    this.personName,
+  });
 
   @override
   State<LendingFormPage> createState() => _LendingFormPageState();
@@ -17,7 +25,7 @@ class LendingFormPage extends StatefulWidget {
 class _LendingFormPageState extends State<LendingFormPage> {
   final _formKey = GlobalKey<FormState>();
   late final _nameController = TextEditingController(
-    text: widget.existing?.personName,
+    text: widget.personName ?? widget.existing?.personName,
   );
   late final _amountController = TextEditingController(
     text: widget.existing?.amount.toStringAsFixed(2),
@@ -28,6 +36,8 @@ class _LendingFormPageState extends State<LendingFormPage> {
   late LendingType _type = widget.existing?.type ?? LendingType.lent;
   late DateTime _date = widget.existing?.transactionDate ?? DateTime.now();
   late DateTime? _dueDate = widget.existing?.dueDate;
+
+  bool get _lockedPerson => widget.contactId != null;
 
   bool _submitting = false;
   int _baselineActionId = 0;
@@ -44,38 +54,62 @@ class _LendingFormPageState extends State<LendingFormPage> {
     }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final bloc = context.read<LendingBloc>();
+    final repo = context.read<LendingRepository>();
     final userId = context.read<AuthBloc>().state.user?.id ?? '';
     final amount = double.parse(_amountController.text);
+    final name = _nameController.text.trim();
     final now = DateTime.now();
 
+    setState(() => _submitting = true);
+
+    String? contactId = widget.contactId;
+    final existing = widget.existing;
+    if (contactId == null &&
+        existing?.contactId != null &&
+        existing!.personName.toLowerCase() == name.toLowerCase()) {
+      contactId = existing.contactId;
+    }
+    if (contactId == null) {
+      final result = await repo.getOrCreateContact(name);
+      if (!mounted) return;
+      String? error;
+      result.fold((failure) => error = failure.message, (id) => contactId = id);
+      if (error != null) {
+        setState(() => _submitting = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error!)));
+        return;
+      }
+      bloc.add(const LendingContactsLoadRequested());
+    }
+
     final entity = LendingEntity(
-      id: widget.existing?.id ?? const Uuid().v4(),
+      id: existing?.id ?? const Uuid().v4(),
       userId: userId,
-      personName: _nameController.text.trim(),
+      personName: name,
+      contactId: contactId,
       type: _type,
       amount: amount,
-      remainingAmount: widget.existing?.remainingAmount ?? amount,
+      remainingAmount: existing?.remainingAmount ?? amount,
       description: _descController.text.trim().isEmpty
           ? null
           : _descController.text.trim(),
       transactionDate: _date,
       dueDate: _dueDate,
-      status: widget.existing?.status ?? LendingStatus.pending,
-      createdAt: widget.existing?.createdAt ?? now,
+      status: existing?.status ?? LendingStatus.pending,
+      createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     );
 
-    setState(() {
-      _submitting = true;
-      _baselineActionId = context.read<LendingBloc>().state.actionId;
-    });
-
-    if (widget.existing != null) {
-      context.read<LendingBloc>().add(LendingRecordUpdated(entity));
+    _baselineActionId = bloc.state.actionId;
+    if (existing != null) {
+      bloc.add(LendingRecordUpdated(entity));
     } else {
-      context.read<LendingBloc>().add(LendingRecordAdded(entity));
+      bloc.add(LendingRecordAdded(entity));
     }
   }
 
@@ -124,7 +158,13 @@ class _LendingFormPageState extends State<LendingFormPage> {
                   const SizedBox(height: AppSpacing.md),
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Person'),
+                    readOnly: _lockedPerson,
+                    decoration: InputDecoration(
+                      labelText: 'Person',
+                      suffixIcon: _lockedPerson
+                          ? const Icon(Icons.lock_outline, size: 18)
+                          : null,
+                    ),
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Enter a name' : null,
                   ),

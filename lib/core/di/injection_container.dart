@@ -2,6 +2,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:expense_tracker/core/network/network_info.dart';
 import 'package:expense_tracker/core/theme/theme_cubit.dart';
 import 'package:expense_tracker/features/authentication/domain/usecases/resend_verification_usecase.dart';
+import 'package:expense_tracker/features/lending/domain/usecases/get_lending_contacts_usecase.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -55,10 +56,6 @@ import 'package:expense_tracker/features/settings/domain/usecases/get_app_info_u
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 
 final sl = GetIt.instance;
-
-/// Call once from main() before runApp(). Registers dependencies bottom-up:
-/// datasources -> repositories -> use cases -> BLoCs, matching the Clean
-/// Architecture dependency direction (Presentation -> Domain -> Data).
 Future<void> initDependencies() async {
   // --- External ---
   final prefs = await SharedPreferences.getInstance();
@@ -140,12 +137,14 @@ Future<void> initDependencies() async {
     () => LendingRepositoryImpl(sl(), sl()),
   );
   sl.registerLazySingleton(() => GetLendingsUseCase(sl()));
+  sl.registerLazySingleton(() => GetLendingContactsUseCase(sl()));
   sl.registerLazySingleton(() => AddLendingUseCase(sl()));
   sl.registerLazySingleton(() => DeleteLendingUseCase(sl()));
   sl.registerLazySingleton(() => RecordPaymentUseCase(sl()));
   sl.registerLazySingleton(
     () => LendingBloc(
       getLendingsUseCase: sl(),
+      getLendingContactsUseCase: sl(),
       addLendingUseCase: sl(),
       deleteLendingUseCase: sl(),
       recordPaymentUseCase: sl(),

@@ -4,6 +4,7 @@ import 'package:expense_tracker/core/error/failures.dart';
 import 'package:expense_tracker/core/network/network_info.dart';
 import 'package:expense_tracker/features/lending/data/datasources/lending_remote_datasource.dart';
 import 'package:expense_tracker/features/lending/data/models/lending_model.dart';
+import 'package:expense_tracker/features/lending/domain/entities/lending_contact_entity.dart';
 import 'package:expense_tracker/features/lending/domain/entities/lending_entity.dart';
 import 'package:expense_tracker/features/lending/domain/repositories/lending_repository.dart';
 
@@ -53,6 +54,14 @@ class LendingRepositoryImpl implements LendingRepository {
   ) => _guard(() => remote.getPaymentHistory(lendingId));
 
   @override
+  Future<Either<Failure, List<LendingContactEntity>>> getContacts() =>
+      _guard(() => remote.getContacts());
+
+  @override
+  Future<Either<Failure, String>> getOrCreateContact(String name) =>
+      _guard(() => remote.getOrCreateContact(name));
+
+  @override
   Future<Either<Failure, LendingEntity>> recordPayment({
     required String lendingId,
     required double amount,
@@ -71,6 +80,7 @@ class LendingRepositoryImpl implements LendingRepository {
     id: e.id,
     userId: e.userId,
     personName: e.personName,
+    contactId: e.contactId,
     type: e.type,
     amount: e.amount,
     remainingAmount: e.remainingAmount,

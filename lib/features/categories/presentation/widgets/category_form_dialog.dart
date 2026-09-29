@@ -65,6 +65,7 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
             const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
               children: categoryIconMap.entries.map((e) {
                 final selected = e.key == _icon;
                 return ChoiceChip(

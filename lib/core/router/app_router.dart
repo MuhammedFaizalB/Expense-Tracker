@@ -12,6 +12,7 @@ import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_
 import 'package:expense_tracker/features/lending/presentation/pages/lending_details_page.dart';
 import 'package:expense_tracker/features/lending/presentation/pages/lending_form_page.dart';
 import 'package:expense_tracker/features/lending/presentation/pages/lending_page.dart';
+import 'package:expense_tracker/features/lending/presentation/pages/person_ledger_page.dart';
 import 'package:expense_tracker/features/settings/presentation/pages/settings_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_detail_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_form_page.dart';
@@ -31,7 +32,6 @@ GoRouter buildRouter(AuthBloc authBloc) {
           state.matchedLocation == '/verify-email' ||
           state.matchedLocation == '/forgot-password';
       final onSplash = state.matchedLocation == '/splash';
-
       if (status == AuthStatus.initial ||
           (status == AuthStatus.loading && onSplash)) {
         return onSplash ? null : '/splash';
@@ -99,7 +99,17 @@ GoRouter buildRouter(AuthBloc authBloc) {
                 routes: [
                   GoRoute(
                     path: 'add',
-                    builder: (context, state) => const LendingFormPage(),
+                    builder: (context, state) => LendingFormPage(
+                      contactId: state.uri.queryParameters['contactId'],
+                      personName: state.uri.queryParameters['name'],
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'people/:contactId',
+                    builder: (context, state) => PersonLedgerPage(
+                      contactId: state.pathParameters['contactId']!,
+                      name: state.uri.queryParameters['name'],
+                    ),
                   ),
                   GoRoute(
                     path: ':id',

@@ -12,6 +12,7 @@ class LendingModel extends LendingEntity {
     required super.status,
     required super.createdAt,
     required super.updatedAt,
+    super.contactId,
     super.description,
     super.dueDate,
   });
@@ -21,6 +22,7 @@ class LendingModel extends LendingEntity {
       id: json['id'] as String,
       userId: json['user_id'] as String,
       personName: json['person_name'] as String,
+      contactId: json['contact_id'] as String?,
       type: json['type'] == 'lent' ? LendingType.lent : LendingType.borrowed,
       amount: (json['amount'] as num).toDouble(),
       remainingAmount: (json['remaining_amount'] as num).toDouble(),
@@ -60,6 +62,7 @@ class LendingModel extends LendingEntity {
 
   Map<String, dynamic> toInsertJson() => {
     'person_name': personName,
+    'contact_id': contactId,
     'type': LendingModel.typeToJson(type),
     'amount': amount,
     'remaining_amount': remainingAmount,

@@ -2,6 +2,7 @@ import 'package:expense_tracker/core/theme/app_section_header.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/lending/domain/entities/lending_entity.dart';
 import 'package:expense_tracker/features/lending/presentation/bloc/lending_bloc.dart';
+import 'package:expense_tracker/features/lending/presentation/pages/people_page.dart';
 import 'package:expense_tracker/features/lending/presentation/widgets/lending_list_tile.dart';
 import 'package:expense_tracker/features/lending/presentation/widgets/lending_summary_card.dart';
 import 'package:flutter/material.dart';
@@ -16,10 +17,14 @@ class LendingPage extends StatefulWidget {
 }
 
 class _LendingPageState extends State<LendingPage> {
+  int _tabIndex = 0;
+
   @override
   void initState() {
     super.initState();
-    context.read<LendingBloc>().add(const LendingLoadRequested());
+    context.read<LendingBloc>()
+      ..add(const LendingLoadRequested())
+      ..add(const LendingContactsLoadRequested());
   }
 
   @override
@@ -31,9 +36,14 @@ class _LendingPageState extends State<LendingPage> {
       ),
       body: Column(
         children: [
-          const AppSectionHeader(
+          AppSectionHeader(
             title: 'Lending',
             subtitle: 'Money you lend and borrow',
+            child: AppHeaderPillTabs(
+              labels: const ['Records', 'People'],
+              selectedIndex: _tabIndex,
+              onChanged: (i) => setState(() => _tabIndex = i),
+            ),
           ),
           Expanded(
             child: BlocBuilder<LendingBloc, LendingState>(
@@ -65,6 +75,8 @@ class _LendingPageState extends State<LendingPage> {
                           r.status != LendingStatus.paid,
                     )
                     .toList();
+
+                if (_tabIndex == 1) return const PeoplePage();
 
                 if (state.records.isEmpty) {
                   return _EmptyState(onAdd: () => context.push('/lending/add'));

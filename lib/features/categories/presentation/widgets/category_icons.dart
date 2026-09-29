@@ -16,6 +16,25 @@ const Map<String, IconData> categoryIconMap = {
   'trending_up': Icons.trending_up,
   'card_giftcard': Icons.card_giftcard_outlined,
   'category': Icons.category_outlined,
+  'groups': Icons.groups_outlined,
+  'theater_comedy': Icons.theater_comedy_outlined,
+  'chair': Icons.chair_outlined,
+  'checkroom': Icons.checkroom_outlined,
+  'spa': Icons.spa_outlined,
+  'redeem': Icons.redeem_outlined,
+  'credit_card': Icons.credit_card_outlined,
+  'local_grocery_store': Icons.local_grocery_store_outlined,
+  'water_drop': Icons.water_drop_outlined,
+  'phone_android': Icons.phone_android_outlined,
+  'local_gas_station': Icons.local_gas_station_outlined,
+  'devices': Icons.devices_outlined,
+  'subscriptions': Icons.subscriptions_outlined,
+  'fitness_center': Icons.fitness_center_outlined,
+
+  'two_wheeler': Icons.two_wheeler_outlined,
+  'pedal_bike': Icons.pedal_bike_outlined,
+  'electric_car': Icons.electric_car_outlined,
+  'car_repair': Icons.car_repair_outlined,
 };
 
 IconData resolveCategoryIcon(String iconName) =>

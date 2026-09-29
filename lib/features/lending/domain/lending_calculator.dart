@@ -48,6 +48,16 @@ class LendingCalculator {
         .fold(0.0, (sum, r) => sum + r.remainingAmount);
   }
 
+  static double netBalance(List<LendingEntity> records) =>
+      totalToReceive(records) - totalToPay(records);
+
+  static bool canAutoSettle(List<LendingEntity> records) {
+    final open = records.where((r) => r.status != LendingStatus.paid).toList();
+    final hasLent = open.any((r) => r.type == LendingType.lent);
+    final hasBorrowed = open.any((r) => r.type == LendingType.borrowed);
+    return hasLent && hasBorrowed && netBalance(open).abs() < _epsilon;
+  }
+
   static double totalToPay(List<LendingEntity> records) {
     return records
         .where(

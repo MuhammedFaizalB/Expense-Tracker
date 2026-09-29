@@ -5,6 +5,7 @@ enum LendingStatusUi { initial, loading, success, failure }
 class LendingState extends Equatable {
   final LendingStatusUi status;
   final List<LendingEntity> records;
+  final List<LendingContactEntity> contacts;
   final LendingType? filterType;
   final LendingStatus? filterStatus;
   final String? errorMessage;
@@ -14,6 +15,7 @@ class LendingState extends Equatable {
   const LendingState({
     this.status = LendingStatusUi.initial,
     this.records = const [],
+    this.contacts = const [],
     this.filterType,
     this.filterStatus,
     this.errorMessage,
@@ -35,6 +37,7 @@ class LendingState extends Equatable {
   LendingState copyWith({
     LendingStatusUi? status,
     List<LendingEntity>? records,
+    List<LendingContactEntity>? contacts,
     LendingType? filterType,
     LendingStatus? filterStatus,
     String? errorMessage,
@@ -45,6 +48,7 @@ class LendingState extends Equatable {
     return LendingState(
       status: status ?? this.status,
       records: records ?? this.records,
+      contacts: contacts ?? this.contacts,
       filterType: clearFilterType ? null : (filterType ?? this.filterType),
       filterStatus: clearFilterStatus
           ? null
@@ -58,6 +62,7 @@ class LendingState extends Equatable {
   List<Object?> get props => [
     status,
     records,
+    contacts,
     filterType,
     filterStatus,
     errorMessage,

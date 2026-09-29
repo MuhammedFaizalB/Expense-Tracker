@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/error/exceptions.dart';
+import 'package:expense_tracker/features/lending/data/models/lending_contact_model.dart';
 import 'package:expense_tracker/features/lending/data/models/lending_model.dart';
 import 'package:expense_tracker/features/lending/domain/entities/lending_entity.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -20,6 +21,8 @@ abstract class LendingRemoteDataSource {
     required DateTime paymentDate,
     String? note,
   });
+  Future<List<LendingContactModel>> getContacts();
+  Future<String> getOrCreateContact(String name);
 }
 
 class LendingRemoteDataSourceImpl implements LendingRemoteDataSource {
@@ -142,6 +145,34 @@ class LendingRemoteDataSourceImpl implements LendingRemoteDataSource {
       throw const ServerException('Could not record the payment.');
     } catch (_) {
       throw const ServerException('Could not record the payment.');
+    }
+  }
+
+  @override
+  Future<List<LendingContactModel>> getContacts() async {
+    try {
+      final rows = await client
+          .from(SupabaseTables.lendingContacts)
+          .select()
+          .order('name', ascending: true);
+      return (rows as List)
+          .map((r) => LendingContactModel.fromJson(r as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      throw const ServerException('Could not load people.');
+    }
+  }
+
+  @override
+  Future<String> getOrCreateContact(String name) async {
+    try {
+      final id = await client.rpc(
+        'get_or_create_lending_contact',
+        params: {'p_name': name},
+      );
+      return id as String;
+    } catch (_) {
+      throw const ServerException('Could not save the person.');
     }
   }
 }

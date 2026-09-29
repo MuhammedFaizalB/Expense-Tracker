@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failures.dart';
+import 'package:expense_tracker/features/lending/domain/entities/lending_contact_entity.dart';
 import 'package:expense_tracker/features/lending/domain/entities/lending_entity.dart';
 
 abstract class LendingRepository {
@@ -16,6 +17,9 @@ abstract class LendingRepository {
     String lendingId,
   );
 
+  Future<Either<Failure, List<LendingContactEntity>>> getContacts();
+
+  Future<Either<Failure, String>> getOrCreateContact(String name);
   Future<Either<Failure, LendingEntity>> recordPayment({
     required String lendingId,
     required double amount,

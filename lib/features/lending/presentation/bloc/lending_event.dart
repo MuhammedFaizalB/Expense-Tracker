@@ -1,14 +1,17 @@
 part of 'lending_bloc.dart';
 
-sealed class LendingEvent extends Equatable {
+abstract class LendingEvent extends Equatable {
   const LendingEvent();
-
   @override
   List<Object?> get props => [];
 }
 
 class LendingLoadRequested extends LendingEvent {
   const LendingLoadRequested();
+}
+
+class LendingContactsLoadRequested extends LendingEvent {
+  const LendingContactsLoadRequested();
 }
 
 class LendingFilterChanged extends LendingEvent {

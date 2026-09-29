@@ -8,6 +8,7 @@ class LendingEntity extends Equatable {
   final String id;
   final String userId;
   final String personName;
+  final String? contactId;
   final LendingType type;
   final double amount;
   final double remainingAmount;
@@ -29,6 +30,7 @@ class LendingEntity extends Equatable {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.contactId,
     this.description,
     this.dueDate,
   });
@@ -52,6 +54,7 @@ class LendingEntity extends Equatable {
 
   LendingEntity copyWith({
     String? personName,
+    String? contactId,
     double? amount,
     double? remainingAmount,
     String? description,
@@ -64,6 +67,7 @@ class LendingEntity extends Equatable {
       id: id,
       userId: userId,
       personName: personName ?? this.personName,
+      contactId: contactId ?? this.contactId,
       type: type,
       amount: amount ?? this.amount,
       remainingAmount: remainingAmount ?? this.remainingAmount,
@@ -81,6 +85,7 @@ class LendingEntity extends Equatable {
     id,
     userId,
     personName,
+    contactId,
     type,
     amount,
     remainingAmount,

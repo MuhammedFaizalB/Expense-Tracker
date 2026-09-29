@@ -8,14 +8,21 @@ import 'package:flutter/material.dart';
 class LendingListTile extends StatelessWidget {
   final LendingEntity record;
   final VoidCallback onTap;
+  final bool ledgerMode;
 
-  const LendingListTile({super.key, required this.record, required this.onTap});
+  const LendingListTile({
+    super.key,
+    required this.record,
+    required this.onTap,
+    this.ledgerMode = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isLent = record.type == LendingType.lent;
     final amountColor = isLent ? context.colors.income : context.colors.expense;
     final overdue = record.effectiveStatus == LendingStatus.overdue;
+    final isPaid = record.status == LendingStatus.paid;
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -33,10 +40,38 @@ class LendingListTile extends StatelessWidget {
             size: 18,
           ),
         ),
-        title: Text(record.personName, style: context.textStyles.titleMedium),
+        title: Text(
+          ledgerMode
+              ? (record.description ?? (isLent ? 'You lent' : 'You borrowed'))
+              : record.personName,
+          style: context.textStyles.titleMedium,
+        ),
         subtitle: Row(
           children: [
-            if (record.dueDate != null)
+            if (ledgerMode)
+              Text(
+                DateFormatter.dayMonth(record.transactionDate),
+                style: context.textStyles.bodyMedium,
+              ),
+            if (isPaid) ...[
+              SizedBox(width: ledgerMode ? AppSpacing.xs : 0),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: context.colors.success.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text(
+                  'Paid',
+                  style: TextStyle(
+                    color: context.colors.success,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+            if (record.dueDate != null && !isPaid)
               Text(
                 'Due ${DateFormatter.dayMonth(record.dueDate!)}',
                 style: context.textStyles.bodyMedium?.copyWith(
@@ -64,9 +99,12 @@ class LendingListTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              CurrencyFormatter.format(record.remainingAmount),
+              CurrencyFormatter.format(
+                isPaid ? record.amount : record.remainingAmount,
+              ),
               style: context.textStyles.titleMedium?.copyWith(
-                color: amountColor,
+                color: isPaid ? context.colors.textSecondary : amountColor,
+                decoration: isPaid ? TextDecoration.lineThrough : null,
               ),
             ),
             if (record.status == LendingStatus.partiallyPaid)
