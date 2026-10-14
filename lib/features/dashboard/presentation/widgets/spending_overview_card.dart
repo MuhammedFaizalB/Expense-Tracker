@@ -78,7 +78,11 @@ class _SpendingOverviewCardState extends State<SpendingOverviewCard> {
       ..sort((a, b) => b.value.compareTo(a.value));
     final top = entries.take(5).toList();
 
-    return List.generate(top.length, (i) {
+    final othersAmount = entries
+        .skip(5)
+        .fold<double>(0, (sum, e) => sum + e.value);
+
+    final slices = List.generate(top.length, (i) {
       final category = categoriesById[top[i].key];
       return _CategorySlice(
         name: category?.name ?? 'Other',
@@ -88,6 +92,16 @@ class _SpendingOverviewCardState extends State<SpendingOverviewCard> {
             : _fallbackPalette[i % _fallbackPalette.length],
       );
     });
+    if (othersAmount > 0) {
+      slices.add(
+        _CategorySlice(
+          name: 'Others',
+          amount: othersAmount,
+          color: const Color(0xFF9CA3AF),
+        ),
+      );
+    }
+    return slices;
   }
 
   @override
