@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_b
 import 'package:expense_tracker/features/lending/domain/repositories/lending_repository.dart';
 import 'package:expense_tracker/features/lending/presentation/bloc/lending_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:expense_tracker/secrets.dart';
 import 'package:flutter/foundation.dart';
@@ -57,6 +58,9 @@ class _MyAppState extends State<MyApp> {
         BlocProvider<SettingsBloc>.value(value: sl<SettingsBloc>()),
         RepositoryProvider<LendingRepository>(
           create: (_) => sl<LendingRepository>(),
+        ),
+        RepositoryProvider<TransactionRepository>(
+          create: (_) => sl<TransactionRepository>(),
         ),
       ],
       child: MultiBlocListener(

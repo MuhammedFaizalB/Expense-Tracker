@@ -27,6 +27,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () => showDialog(
           context: context,
           builder: (_) => CategoryFormDialog(

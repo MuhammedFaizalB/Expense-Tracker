@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_bloc.dart';
+import 'package:expense_tracker/features/transactions/presentation/export/export_transactions_action.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/monthly_summary_card.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_filter_sheet.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_tile.dart';
@@ -53,6 +54,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () => context.push('/transactions/add'),
         child: const Icon(Icons.add),
       ),
@@ -60,13 +62,23 @@ class _TransactionsPageState extends State<TransactionsPage> {
         children: [
           AppSectionHeader(
             title: 'Transactions',
-            trailing: AppHeaderIconButton(
-              icon: Icons.tune,
-              onTap: () => showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                builder: (_) => const TransactionFilterSheet(),
-              ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppHeaderIconButton(
+                  icon: Icons.picture_as_pdf_outlined,
+                  onTap: () => exportTransactionsPdf(context),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                AppHeaderIconButton(
+                  icon: Icons.tune,
+                  onTap: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (_) => const TransactionFilterSheet(),
+                  ),
+                ),
+              ],
             ),
             child: AppHeaderPillTabs(
               labels: const ['All', 'Income', 'Expenses'],
