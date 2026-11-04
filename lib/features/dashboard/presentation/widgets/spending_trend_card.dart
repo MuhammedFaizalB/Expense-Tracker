@@ -1,41 +1,26 @@
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/core/theme/theme_extensions.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class SpendingTrendCard extends StatelessWidget {
-  final List<TransactionEntity> transactions;
-  const SpendingTrendCard({super.key, required this.transactions});
-
-  List<({String label, double total})> _computeMonthlyTotals() {
-    final now = DateTime.now();
-    final months = List.generate(
-      6,
-      (i) => DateTime(now.year, now.month - (5 - i), 1),
-    );
-
-    return months.map((month) {
-      final total = transactions
-          .where(
-            (t) =>
-                t.type == TransactionType.expense &&
-                t.transactionDate.year == month.year &&
-                t.transactionDate.month == month.month,
-          )
-          .fold(0.0, (sum, t) => sum + t.amount);
-      return (label: DateFormat('MMM').format(month), total: total);
-    }).toList();
-  }
+  final List<MonthTotal> data;
+  final DateTime selectedMonth;
+  const SpendingTrendCard({
+    super.key,
+    required this.data,
+    required this.selectedMonth,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final data = _computeMonthlyTotals();
     final maxValue = data
         .map((d) => d.total)
         .fold(0.0, (a, b) => a > b ? a : b);
     final chartMax = maxValue <= 0 ? 100.0 : maxValue * 1.2;
+    final colors = context.colors;
 
     return Card(
       child: Padding(
@@ -73,7 +58,7 @@ class SpendingTrendCard extends StatelessWidget {
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              data[i].label,
+                              DateFormat('MMM').format(data[i].month),
                               style: context.textStyles.bodyMedium?.copyWith(
                                 fontSize: 11,
                               ),
@@ -84,12 +69,17 @@ class SpendingTrendCard extends StatelessWidget {
                     ),
                   ),
                   barGroups: List.generate(data.length, (i) {
+                    final isSelected =
+                        data[i].month.year == selectedMonth.year &&
+                        data[i].month.month == selectedMonth.month;
                     return BarChartGroupData(
                       x: i,
                       barRods: [
                         BarChartRodData(
                           toY: data[i].total,
-                          color: context.colors.primary,
+                          color: isSelected
+                              ? colors.primary
+                              : colors.primary.withValues(alpha: 0.35),
                           width: 18,
                           borderRadius: BorderRadius.circular(6),
                         ),

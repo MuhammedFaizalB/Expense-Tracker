@@ -5,19 +5,25 @@ import 'package:flutter/material.dart';
 
 class DashboardHeroHeader extends StatelessWidget {
   final String greeting;
+  final String monthLabel;
   final double balance;
   final double income;
   final double expense;
   final VoidCallback? onNotificationTap;
+
+  final VoidCallback? onMonthTap;
+
   final VoidCallback? onWalletTap;
 
   const DashboardHeroHeader({
     super.key,
     required this.greeting,
+    required this.monthLabel,
     required this.balance,
     required this.income,
     required this.expense,
     this.onNotificationTap,
+    this.onMonthTap,
     this.onWalletTap,
   });
 
@@ -57,7 +63,7 @@ class DashboardHeroHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      "Here's your money summary for this month.",
+                      "Here's your money summary for $monthLabel.",
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 12,
@@ -66,13 +72,16 @@ class DashboardHeroHeader extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: AppSpacing.sm),
               _IconBadge(
                 icon: Icons.notifications_none_rounded,
                 onTap: onNotificationTap,
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
+          _MonthPill(label: monthLabel, onTap: onMonthTap),
+          const SizedBox(height: AppSpacing.md),
           _BalanceCard(
             balance: balance,
             income: income,
@@ -80,6 +89,52 @@ class DashboardHeroHeader extends StatelessWidget {
             onWalletTap: onWalletTap,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MonthPill extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  const _MonthPill({required this.label, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.calendar_month_rounded,
+              color: Colors.white,
+              size: 16,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Colors.white.withValues(alpha: 0.8),
+              size: 18,
+            ),
+          ],
+        ),
       ),
     );
   }

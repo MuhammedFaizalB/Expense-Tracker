@@ -3,20 +3,35 @@ import 'package:expense_tracker/features/dashboard/domain/dashboard_calculator.d
 import 'package:expense_tracker/features/lending/domain/entities/lending_entity.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 
+class MonthTotal extends Equatable {
+  final DateTime month;
+  final double total;
+  const MonthTotal({required this.month, required this.total});
+
+  @override
+  List<Object?> get props => [month, total];
+}
+
 class DashboardSummary extends Equatable {
+  final DateTime month;
   final double totalIncome;
   final double totalExpense;
   final double toReceive;
   final double toPay;
-  final List<TransactionEntity> recentTransactions;
+
+  final List<TransactionEntity> monthTransactions;
+
+  final List<MonthTotal> trend;
   final List<LendingEntity> recentLending;
 
   const DashboardSummary({
+    required this.month,
     required this.totalIncome,
     required this.totalExpense,
     required this.toReceive,
     required this.toPay,
-    required this.recentTransactions,
+    required this.monthTransactions,
+    required this.trend,
     required this.recentLending,
   });
 
@@ -25,21 +40,29 @@ class DashboardSummary extends Equatable {
     totalExpense: totalExpense,
   );
 
-  const DashboardSummary.empty()
-    : totalIncome = 0,
+  List<TransactionEntity> get recentTransactions =>
+      monthTransactions.take(5).toList();
+
+  DashboardSummary.empty([DateTime? forMonth])
+    : month =
+          forMonth ?? DateTime(DateTime.now().year, DateTime.now().month, 1),
+      totalIncome = 0,
       totalExpense = 0,
       toReceive = 0,
       toPay = 0,
-      recentTransactions = const [],
+      monthTransactions = const [],
+      trend = const [],
       recentLending = const [];
 
   @override
   List<Object?> get props => [
+    month,
     totalIncome,
     totalExpense,
     toReceive,
     toPay,
-    recentTransactions,
+    monthTransactions,
+    trend,
     recentLending,
   ];
 }

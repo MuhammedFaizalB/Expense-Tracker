@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/lending/domain/entities/lending_entity.
 import 'package:expense_tracker/features/lending/presentation/bloc/lending_bloc.dart';
 import 'package:expense_tracker/features/lending/presentation/export/export_lending_action.dart';
 import 'package:expense_tracker/features/lending/presentation/pages/people_page.dart';
+import 'package:expense_tracker/features/lending/presentation/widgets/lending_filter_sheet.dart';
 import 'package:expense_tracker/features/lending/presentation/widgets/lending_list_tile.dart';
 import 'package:expense_tracker/features/lending/presentation/widgets/lending_summary_card.dart';
 import 'package:flutter/material.dart';
@@ -41,9 +42,19 @@ class _LendingPageState extends State<LendingPage> {
           AppSectionHeader(
             title: 'Lending',
             subtitle: 'Money you lend and borrow',
-            trailing: AppHeaderIconButton(
-              icon: Icons.picture_as_pdf_outlined,
-              onTap: () => exportLendingPdf(context),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppHeaderIconButton(
+                  icon: Icons.picture_as_pdf_outlined,
+                  onTap: () => exportLendingPdf(context),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                AppHeaderIconButton(
+                  icon: Icons.tune,
+                  onTap: () => showLendingFilterSheet(context),
+                ),
+              ],
             ),
             child: AppHeaderPillTabs(
               labels: const ['Records', 'People'],
@@ -82,6 +93,9 @@ class _LendingPageState extends State<LendingPage> {
                     )
                     .toList();
 
+                final filtering =
+                    state.filterType != null || state.filterStatus != null;
+
                 if (_tabIndex == 1) return const PeoplePage();
 
                 if (state.records.isEmpty) {
@@ -100,32 +114,46 @@ class _LendingPageState extends State<LendingPage> {
                         toPay: state.totalToPay,
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      if (toReceive.isNotEmpty) ...[
+                      if (filtering) ...[
                         Text(
-                          'TO RECEIVE',
+                          'RESULTS (${state.filteredRecords.length})',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         const SizedBox(height: AppSpacing.sm),
-                        ...toReceive.map(
+                        ...state.filteredRecords.map(
                           (r) => LendingListTile(
                             record: r,
                             onTap: () => context.push('/lending/${r.id}'),
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
-                      if (toPay.isNotEmpty) ...[
-                        Text(
-                          'TO PAY',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        ...toPay.map(
-                          (r) => LendingListTile(
-                            record: r,
-                            onTap: () => context.push('/lending/${r.id}'),
+                      ] else ...[
+                        if (toReceive.isNotEmpty) ...[
+                          Text(
+                            'TO RECEIVE',
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
-                        ),
+                          const SizedBox(height: AppSpacing.sm),
+                          ...toReceive.map(
+                            (r) => LendingListTile(
+                              record: r,
+                              onTap: () => context.push('/lending/${r.id}'),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
+                        if (toPay.isNotEmpty) ...[
+                          Text(
+                            'TO PAY',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          ...toPay.map(
+                            (r) => LendingListTile(
+                              record: r,
+                              onTap: () => context.push('/lending/${r.id}'),
+                            ),
+                          ),
+                        ],
                       ],
                     ],
                   ),

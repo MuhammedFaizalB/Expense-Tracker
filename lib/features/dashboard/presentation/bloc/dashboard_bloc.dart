@@ -1,11 +1,9 @@
 import 'package:equatable/equatable.dart';
-import 'package:expense_tracker/core/usecase.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:expense_tracker/features/dashboard/domain/usecases/get_dashboard_summary_usecase.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 // --- Events ---
-
 abstract class DashboardEvent extends Equatable {
   const DashboardEvent();
   @override
@@ -13,51 +11,60 @@ abstract class DashboardEvent extends Equatable {
 }
 
 class DashboardLoadRequested extends DashboardEvent {
-  const DashboardLoadRequested();
+  final DateTime? month;
+  const DashboardLoadRequested({this.month});
+  @override
+  List<Object?> get props => [month];
 }
 
 // --- State ---
 enum DashboardStatusUi { initial, loading, success, failure }
 
+DateTime _firstOfThisMonth() {
+  final n = DateTime.now();
+  return DateTime(n.year, n.month, 1);
+}
+
 class DashboardState extends Equatable {
   final DashboardStatusUi status;
   final DashboardSummary summary;
+  final DateTime selectedMonth;
   final String? errorMessage;
 
-  const DashboardState({
+  DashboardState({
     this.status = DashboardStatusUi.initial,
-    this.summary = const DashboardSummary.empty(),
+    DashboardSummary? summary,
+    DateTime? selectedMonth,
     this.errorMessage,
-  });
+  }) : selectedMonth = selectedMonth ?? _firstOfThisMonth(),
+       summary = summary ?? DashboardSummary.empty(selectedMonth);
 
   double get balance => summary.balance;
 
   DashboardState copyWith({
     DashboardStatusUi? status,
     DashboardSummary? summary,
+    DateTime? selectedMonth,
     String? errorMessage,
   }) {
     return DashboardState(
       status: status ?? this.status,
       summary: summary ?? this.summary,
+      selectedMonth: selectedMonth ?? this.selectedMonth,
       errorMessage: errorMessage,
     );
   }
 
   @override
-  List<Object?> get props => [status, summary, errorMessage];
+  List<Object?> get props => [status, summary, selectedMonth, errorMessage];
 }
 
 // --- Bloc ---
-/// Goes through GetDashboardSummaryUseCase -> DashboardRepository, same as
-/// every other feature — it does not read TransactionRepository/
-/// LendingRepository directly (that composition lives in
-/// DashboardRepositoryImpl, in the data layer where it belongs).
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   final GetDashboardSummaryUseCase getDashboardSummaryUseCase;
 
   DashboardBloc({required this.getDashboardSummaryUseCase})
-    : super(const DashboardState()) {
+    : super(DashboardState()) {
     on<DashboardLoadRequested>(_onLoad);
   }
 
@@ -65,8 +72,13 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     DashboardLoadRequested event,
     Emitter<DashboardState> emit,
   ) async {
-    emit(state.copyWith(status: DashboardStatusUi.loading));
-    final result = await getDashboardSummaryUseCase(const NoParams());
+    final month = event.month == null
+        ? state.selectedMonth
+        : DateTime(event.month!.year, event.month!.month, 1);
+    emit(
+      state.copyWith(status: DashboardStatusUi.loading, selectedMonth: month),
+    );
+    final result = await getDashboardSummaryUseCase(month);
     result.fold(
       (failure) => emit(
         state.copyWith(

@@ -5,11 +5,11 @@ import 'package:expense_tracker/features/dashboard/domain/entities/dashboard_sum
 import 'package:expense_tracker/features/dashboard/domain/repositories/dashboard_repository.dart';
 
 class GetDashboardSummaryUseCase
-    implements UseCase<DashboardSummary, NoParams> {
+    implements UseCase<DashboardSummary, DateTime> {
   final DashboardRepository repository;
   const GetDashboardSummaryUseCase(this.repository);
 
   @override
-  Future<Either<Failure, DashboardSummary>> call(NoParams params) =>
-      repository.getDashboardSummary();
+  Future<Either<Failure, DashboardSummary>> call(DateTime month) =>
+      repository.getDashboardSummary(month);
 }
