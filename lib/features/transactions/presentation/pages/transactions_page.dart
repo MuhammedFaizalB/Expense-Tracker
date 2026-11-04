@@ -1,7 +1,10 @@
 import 'package:expense_tracker/core/theme/app_section_header.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/core/theme/theme_extensions.dart';
+import 'package:expense_tracker/core/utils/period.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_filter.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/export/export_transactions_action.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/monthly_summary_card.dart';
@@ -27,6 +30,12 @@ class _TransactionsPageState extends State<TransactionsPage> {
     context.read<TransactionBloc>().add(const TransactionLoadRequested());
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   void _applySearch(String value) {
     final bloc = context.read<TransactionBloc>();
     bloc.add(
@@ -48,9 +57,31 @@ class _TransactionsPageState extends State<TransactionsPage> {
     );
   }
 
+  void _shiftMonth(TransactionFilter filter, int delta) {
+    final start = filter.startDate!;
+    final target = DateTime(start.year, start.month + delta, 1);
+    context.read<TransactionBloc>().add(
+      TransactionFilterChanged(
+        filter.copyWith(
+          startDate: target,
+          endDate: DateTime(target.year, target.month + 1, 0),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final activeType = context.watch<TransactionBloc>().state.filter.type;
+    final filter = context.watch<TransactionBloc>().state.filter;
+    final activeType = filter.type;
+    final periodLabel = Period.describe(filter.startDate, filter.endDate);
+    final isMonth = Period.isWholeMonth(filter.startDate, filter.endDate);
+    final now = DateTime.now();
+    final canGoNext =
+        isMonth &&
+        (filter.startDate!.year < now.year ||
+            (filter.startDate!.year == now.year &&
+                filter.startDate!.month < now.month));
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
@@ -72,11 +103,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 const SizedBox(width: AppSpacing.sm),
                 AppHeaderIconButton(
                   icon: Icons.tune,
-                  onTap: () => showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (_) => const TransactionFilterSheet(),
-                  ),
+                  onTap: () => showTransactionFilterSheet(context),
                 ),
               ],
             ),
@@ -123,6 +150,76 @@ class _TransactionsPageState extends State<TransactionsPage> {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.sm,
+              AppSpacing.sm,
+              AppSpacing.sm,
+              0,
+            ),
+            child: Row(
+              children: [
+                if (isMonth)
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left_rounded),
+                    onPressed: () => _shiftMonth(filter, -1),
+                  )
+                else
+                  const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Center(
+                    child: InkWell(
+                      onTap: () => showTransactionFilterSheet(context),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.colors.surfaceVariant,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              size: 15,
+                              color: context.colors.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                periodLabel,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.textStyles.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 18,
+                              color: context.colors.textSecondary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (isMonth)
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right_rounded),
+                    onPressed: canGoNext ? () => _shiftMonth(filter, 1) : null,
+                  )
+                else
+                  const SizedBox(width: AppSpacing.sm),
+              ],
+            ),
+          ),
           Expanded(
             child: BlocBuilder<TransactionBloc, TransactionState>(
               builder: (context, state) {
@@ -140,6 +237,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 }
                 if (state.transactions.isEmpty) {
                   return _EmptyState(
+                    periodLabel: periodLabel,
                     onAdd: () => context.push('/transactions/add'),
                   );
                 }
@@ -155,12 +253,11 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       child: ListView(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         children: [
-                          if (activeType != TransactionType.income) ...[
-                            MonthlySummaryCard(
-                              transactions: state.transactions,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                          ],
+                          MonthlySummaryCard(
+                            transactions: state.transactions,
+                            periodLabel: periodLabel,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
                           ...state.transactions.map(
                             (t) => TransactionListTile(
                               transaction: t,
@@ -184,8 +281,9 @@ class _TransactionsPageState extends State<TransactionsPage> {
 }
 
 class _EmptyState extends StatelessWidget {
+  final String periodLabel;
   final VoidCallback onAdd;
-  const _EmptyState({required this.onAdd});
+  const _EmptyState({required this.periodLabel, required this.onAdd});
 
   @override
   Widget build(BuildContext context) {
@@ -202,12 +300,12 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'No transactions yet',
+              'No transactions',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Start tracking your money by adding your first transaction.',
+              'Nothing found for $periodLabel. Add one, or pick another period.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),

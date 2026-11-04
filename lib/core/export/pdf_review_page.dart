@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
@@ -37,8 +37,12 @@ Future<void> openPdfPreview(
   required Uint8List bytes,
   required String fileName,
   required String title,
-}) {
-  return Navigator.of(context, rootNavigator: true).push(
+}) async {
+  if (kIsWeb) {
+    await Printing.sharePdf(bytes: bytes, filename: fileName);
+    return;
+  }
+  await Navigator.of(context, rootNavigator: true).push(
     MaterialPageRoute<void>(
       builder: (_) =>
           PdfPreviewPage(bytes: bytes, fileName: fileName, title: title),

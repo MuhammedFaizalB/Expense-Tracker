@@ -1,7 +1,11 @@
 import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/core/theme/theme_extensions.dart';
+import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/core/widgets/modern_ui.dart';
 import 'package:expense_tracker/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_entity.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_bloc.dart';
+import 'package:expense_tracker/features/categories/presentation/widgets/category_picker.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:flutter/material.dart';
@@ -29,10 +33,23 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
   );
   late TransactionType _type = widget.existing?.type ?? TransactionType.expense;
   String? _categoryId;
-  late DateTime _date = widget.existing?.transactionDate ?? DateTime.now();
+  bool _categoryError = false;
+  late DateTime _date = _clampToToday(
+    widget.existing?.transactionDate ?? DateTime.now(),
+  );
 
   bool _submitting = false;
   int _baselineActionId = 0;
+
+  static DateTime _today() {
+    final n = DateTime.now();
+    return DateTime(n.year, n.month, n.day);
+  }
+
+  static DateTime _clampToToday(DateTime d) {
+    final day = DateTime(d.year, d.month, d.day);
+    return day.isAfter(_today()) ? _today() : day;
+  }
 
   @override
   void initState() {
@@ -40,14 +57,45 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     _categoryId = widget.existing?.categoryId;
   }
 
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _titleController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      lastDate: _today(),
+    );
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  String _dateLabel() {
+    final today = _today();
+    if (_date == today) return 'Today, ${DateFormatter.display(_date)}';
+    if (_date == today.subtract(const Duration(days: 1))) {
+      return 'Yesterday, ${DateFormatter.display(_date)}';
+    }
+    return DateFormatter.display(_date);
+  }
+
   void _submit() {
-    if (!_formKey.currentState!.validate()) return;
-    if (_categoryId == null) {
+    final formOk = _formKey.currentState!.validate();
+    if (_categoryId == null) setState(() => _categoryError = true);
+    if (!formOk || _categoryId == null) return;
+
+    if (_date.isAfter(_today())) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category.')),
+        const SnackBar(content: Text('Date can’t be in the future.')),
       );
       return;
     }
+
     final userId = context.read<AuthBloc>().state.user?.id ?? '';
     final now = DateTime.now();
 
@@ -78,15 +126,97 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     }
   }
 
+  Widget _typeToggle(BuildContext context) {
+    final colors = context.colors;
+    Widget option(
+      TransactionType type,
+      String label,
+      IconData icon,
+      Color tone,
+    ) {
+      final selected = _type == type;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => setState(() {
+            _type = type;
+            _categoryId = null;
+            _categoryError = false;
+          }),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: selected
+                  ? tone.withValues(alpha: 0.14)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              border: Border.all(
+                color: selected ? tone : Colors.transparent,
+                width: 1.3,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
+                  color: selected ? tone : colors.textSecondary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: selected ? tone : colors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: colors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Row(
+        children: [
+          option(
+            TransactionType.expense,
+            'Expense',
+            Icons.north_east_rounded,
+            colors.expense,
+          ),
+          option(
+            TransactionType.income,
+            'Income',
+            Icons.south_west_rounded,
+            colors.income,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final categories = context.watch<CategoryBloc>().state.categories.where(
-      (c) =>
-          c.type ==
-          (_type == TransactionType.income
-              ? CategoryType.income
-              : CategoryType.expense),
-    );
+    final List<CategoryEntity> categories = context
+        .watch<CategoryBloc>()
+        .state
+        .categories
+        .where(
+          (c) =>
+              c.type ==
+              (_type == TransactionType.income
+                  ? CategoryType.income
+                  : CategoryType.expense),
+        )
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -114,32 +244,25 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SegmentedButton<TransactionType>(
-                    segments: const [
-                      ButtonSegment(
-                        value: TransactionType.expense,
-                        label: Text('Expense'),
-                      ),
-                      ButtonSegment(
-                        value: TransactionType.income,
-                        label: Text('Income'),
-                      ),
-                    ],
-                    selected: {_type},
-                    onSelectionChanged: (s) => setState(() {
-                      _type = s.first;
-                      _categoryId = null;
-                    }),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                  _typeToggle(context),
+                  const SizedBox(height: AppSpacing.lg),
                   TextFormField(
                     controller: _amountController,
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
+                    textAlign: TextAlign.center,
+                    style: context.textStyles.headlineSmall?.copyWith(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                    ),
                     decoration: const InputDecoration(
-                      labelText: 'Amount',
+                      hintText: '0.00',
                       prefixText: '₹ ',
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: AppSpacing.md,
+                      ),
                     ),
                     validator: (v) {
                       final n = double.tryParse(v ?? '');
@@ -152,25 +275,32 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                   const SizedBox(height: AppSpacing.md),
                   TextFormField(
                     controller: _titleController,
+                    textCapitalization: TextCapitalization.sentences,
                     decoration: const InputDecoration(labelText: 'Title'),
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? 'Enter a title'
                         : null,
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  DropdownButtonFormField<String>(
-                    initialValue: _categoryId,
-                    decoration: const InputDecoration(labelText: 'Category'),
-                    items: categories
-                        .map(
-                          (c) => DropdownMenuItem(
-                            value: c.id,
-                            child: Text(c.name),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (v) => setState(() => _categoryId = v),
-                    validator: (v) => v == null ? 'Select a category' : null,
+                  CategoryPickerField(
+                    categories: categories,
+                    selectedId: _categoryId,
+                    errorText: _categoryError ? 'Select a category' : null,
+                    onChanged: (id) => setState(() {
+                      _categoryId = id;
+                      _categoryError = false;
+                    }),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  PickerField(
+                    label: 'Date',
+                    value: _dateLabel(),
+                    leading: Icon(
+                      Icons.calendar_today_outlined,
+                      color: context.colors.textSecondary,
+                    ),
+                    trailingIcon: Icons.edit_calendar_outlined,
+                    onTap: _pickDate,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   TextFormField(
@@ -179,21 +309,6 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                       labelText: 'Description (optional)',
                     ),
                     maxLines: 2,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Date'),
-                    trailing: Text('${_date.day}/${_date.month}/${_date.year}'),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _date,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (picked != null) setState(() => _date = picked);
-                    },
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   ElevatedButton(

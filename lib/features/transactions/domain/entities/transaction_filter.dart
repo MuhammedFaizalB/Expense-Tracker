@@ -20,6 +20,37 @@ class TransactionFilter extends Equatable {
     this.sort = TransactionSort.dateDesc,
   });
 
+  factory TransactionFilter.currentMonth() =>
+      TransactionFilter.forMonth(DateTime.now());
+
+  factory TransactionFilter.forMonth(DateTime month) => TransactionFilter(
+    startDate: DateTime(month.year, month.month, 1),
+    endDate: DateTime(month.year, month.month + 1, 0),
+  );
+
+  bool matches(TransactionEntity t) {
+    if (type != null && t.type != type) return false;
+    if (categoryId != null && t.categoryId != categoryId) return false;
+    final day = DateTime(
+      t.transactionDate.year,
+      t.transactionDate.month,
+      t.transactionDate.day,
+    );
+    if (startDate != null &&
+        day.isBefore(
+          DateTime(startDate!.year, startDate!.month, startDate!.day),
+        )) {
+      return false;
+    }
+    if (endDate != null &&
+        day.isAfter(DateTime(endDate!.year, endDate!.month, endDate!.day))) {
+      return false;
+    }
+    final q = searchQuery?.trim().toLowerCase() ?? '';
+    if (q.isNotEmpty && !t.title.toLowerCase().contains(q)) return false;
+    return true;
+  }
+
   TransactionFilter copyWith({
     TransactionType? type,
     String? categoryId,

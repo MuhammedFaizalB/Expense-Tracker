@@ -6,29 +6,51 @@ import 'package:flutter/material.dart';
 
 class MonthlySummaryCard extends StatelessWidget {
   final List<TransactionEntity> transactions;
-  const MonthlySummaryCard({super.key, required this.transactions});
+  final String periodLabel;
+  const MonthlySummaryCard({
+    super.key,
+    required this.transactions,
+    required this.periodLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final lastMonth = DateTime(now.year, now.month - 1, 1);
-
-    double totalFor(DateTime month) => transactions
-        .where(
-          (t) =>
-              t.type == TransactionType.expense &&
-              t.transactionDate.year == month.year &&
-              t.transactionDate.month == month.month,
-        )
-        .fold(0.0, (sum, t) => sum + t.amount);
-
-    final thisMonthTotal = totalFor(now);
-    final lastMonthTotal = totalFor(lastMonth);
-    final pctChange = lastMonthTotal == 0
-        ? null
-        : ((thisMonthTotal - lastMonthTotal) / lastMonthTotal * 100);
-    final isHigher = (pctChange ?? 0) >= 0;
     final colors = context.colors;
+    double income = 0, expense = 0;
+    for (final t in transactions) {
+      if (t.type == TransactionType.income) {
+        income += t.amount;
+      } else {
+        expense += t.amount;
+      }
+    }
+    final net = income - expense;
+    final netText =
+        '${net > 0 ? '+' : (net < 0 ? '-' : '')}${CurrencyFormatter.format(net.abs())}';
+
+    Widget stat(String label, String value) => Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.75),
+              fontSize: 11.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -37,59 +59,56 @@ class MonthlySummaryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.xl),
         boxShadow: AppEffects.glow(colors.glow),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.attach_money, color: Colors.white),
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.calendar_month_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm + 2),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      periodLabel,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      'Spent ${CurrencyFormatter.format(expense)}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Monthly Summary',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75),
-                    fontSize: 12,
-                  ),
-                ),
-                Text(
-                  "You're spending ${CurrencyFormatter.format(thisMonthTotal)} this month",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-                if (pctChange != null) ...[
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(
-                        isHigher ? Icons.arrow_upward : Icons.arrow_downward,
-                        size: 12,
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '${pctChange.abs().toStringAsFixed(0)}% ${isHigher ? 'higher' : 'lower'} than last month',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              stat('Income', CurrencyFormatter.format(income)),
+              stat('Expenses', CurrencyFormatter.format(expense)),
+              stat('Net', netText),
+            ],
           ),
         ],
       ),
