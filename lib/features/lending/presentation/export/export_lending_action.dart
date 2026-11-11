@@ -5,7 +5,6 @@ import 'package:expense_tracker/features/lending/domain/entities/lending_entity.
 import 'package:expense_tracker/features/lending/domain/repositories/lending_repository.dart';
 import 'package:expense_tracker/features/lending/presentation/bloc/lending_bloc.dart';
 import 'package:expense_tracker/features/lending/presentation/export/lending_pdf_builder.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -60,13 +59,12 @@ Future<void> exportLendingPdf(BuildContext context) async {
   } catch (e, st) {
     debugPrint('Transactions PDF export failed: $e\n$st');
     messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          kDebugMode
-              ? 'PDF export failed: $e'
-              : 'Could not create the PDF. Please try again.',
-        ),
-      ),
+      SnackBar(content: Text('Could not create the PDF: ${_shortReason(e)}')),
     );
   }
+}
+
+String _shortReason(Object e) {
+  final text = e.toString().split('\n').first.trim();
+  return text.length > 140 ? '${text.substring(0, 140)}…' : text;
 }

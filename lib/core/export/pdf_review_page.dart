@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
+import 'web_download_web.dart';
+
 class PdfPreviewPage extends StatelessWidget {
   final Uint8List bytes;
   final String fileName;
@@ -39,7 +41,7 @@ Future<void> openPdfPreview(
   required String title,
 }) async {
   if (kIsWeb) {
-    await Printing.sharePdf(bytes: bytes, filename: fileName);
+    await downloadPdfBytes(bytes, fileName);
     return;
   }
   await Navigator.of(context, rootNavigator: true).push(
